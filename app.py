@@ -15,6 +15,7 @@ server = app.server
 app.layout = dbc.Container(
     [
         dcc.Store(id="pv-settings-store", storage_type="local"),
+        dcc.Store(id="date-range-store", storage_type="local"),
         dbc.Row([
             dbc.Col(
                 [
@@ -101,6 +102,8 @@ app.layout = dbc.Container(
                     dbc.InputGroupText("Periode"),
                     dcc.DatePickerRange(
                         id="date-range",
+                        start_date="2024-01-01",
+                        end_date="2024-12-31",
                         start_date_placeholder_text="Start dato",
                         end_date_placeholder_text="Slut dato",
                         display_format="YYYY-MM-DD",
@@ -167,6 +170,30 @@ def load_pv_settings(data):
         data.get("orientation", dash.no_update),
         data.get("tilt", dash.no_update),
     )
+
+
+@app.callback(
+    Output("date-range-store", "data"),
+    Input("date-range", "start_date"),
+    Input("date-range", "end_date"),
+    State("date-range-store", "data"),
+)
+def save_date_range(start_date, end_date, current):
+    data = {"start": start_date, "end": end_date}
+    if current == data:
+        raise dash.exceptions.PreventUpdate
+    return data
+
+
+@app.callback(
+    Output("date-range", "start_date"),
+    Output("date-range", "end_date"),
+    Input("date-range-store", "data"),
+)
+def load_date_range(data):
+    if not data:
+        return dash.no_update, dash.no_update
+    return data.get("start", dash.no_update), data.get("end", dash.no_update)
 
 
 @app.callback(

@@ -39,6 +39,23 @@ def test_fetch_downloads_and_caches(tmp_path):
         assert len(df) == 1
 
 
+def test_fetch_swaps_reversed_dates(tmp_path):
+    start = datetime(2024, 1, 2)
+    end = datetime(2024, 1, 1)
+    cache_dir = tmp_path
+    cache_dir.mkdir(exist_ok=True)
+    resp = mock.Mock()
+    resp.raise_for_status.return_value = None
+    resp.json.return_value = {"features": []}
+
+    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir), \
+         mock.patch("modules.dmi_weather.requests.get", return_value=resp) as req:
+        dmi_weather.fetch_observations("06180", start, end)
+        assert req.call_count == 1
+        params = req.call_args[1]["params"]
+        assert params["datetime"] == "2024-01-01T00:00:00Z/2024-01-02T00:00:00Z"
+
+
 def test_get_hourly_global_radiation():
     df = pd.DataFrame({
         "properties.parameterId": ["globalRadiation", "globalRadiation"],

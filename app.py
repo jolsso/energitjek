@@ -40,36 +40,76 @@ app.layout = dbc.Container(
                     className="mb-2",
                 ),
                 html.H4("Opsætning af solcelle anlæg", className="mt-4"),
-                dbc.Input(
-                    id="pv-size",
-                    type="number",
-                    min=0,
-                    max=100,
-                    value=5,
-                    placeholder="Solcelleanlæg størrelse (kW)",
-                    className="mb-2",
+                dbc.InputGroup([
+                    dbc.InputGroupText("Størrelse (kW)"),
+                    dbc.Input(
+                        id="pv-size",
+                        type="number",
+                        min=0,
+                        max=100,
+                        value=5,
+                    ),
+                    dbc.Button("?", id="pv-size-info-btn", color="secondary", outline=True),
+                ], className="mb-2"),
+                dbc.Popover(
+                    [dbc.PopoverHeader("Solcelleanlæg størrelse"),
+                     dbc.PopoverBody("Angiv den nominelle effekt af dit solcelleanlæg i kW")],
+                    target="pv-size-info-btn",
+                    trigger="click",
+                    placement="right",
                 ),
-                dbc.Select(
-                    id="pv-orientation",
-                    options=[{"label": o, "value": o} for o in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]],
-                    placeholder="Retning",
-                    className="mb-2",
+
+                dbc.InputGroup([
+                    dbc.InputGroupText("Retning"),
+                    dbc.Select(
+                        id="pv-orientation",
+                        options=[{"label": o, "value": o} for o in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]],
+                    ),
+                    dbc.Button("?", id="pv-orientation-info-btn", color="secondary", outline=True),
+                ], className="mb-2"),
+                dbc.Popover(
+                    [dbc.PopoverHeader("Panelretning"),
+                     dbc.PopoverBody("Vælg hvilken kompasretning panelerne vender")],
+                    target="pv-orientation-info-btn",
+                    trigger="click",
+                    placement="right",
                 ),
-                dbc.Input(
-                    id="pv-tilt",
-                    type="number",
-                    min=0,
-                    max=90,
-                    value=30,
-                    placeholder="Hældning (grader)",
-                    className="mb-2",
+
+                dbc.InputGroup([
+                    dbc.InputGroupText("Hældning"),
+                    dbc.Input(
+                        id="pv-tilt",
+                        type="number",
+                        min=0,
+                        max=90,
+                        value=30,
+                    ),
+                    dbc.Button("?", id="pv-tilt-info-btn", color="secondary", outline=True),
+                ], className="mb-2"),
+                dbc.Popover(
+                    [dbc.PopoverHeader("Hældning"),
+                     dbc.PopoverBody("Indtast solcellernes vinkel i grader")],
+                    target="pv-tilt-info-btn",
+                    trigger="click",
+                    placement="right",
                 ),
-                dcc.DatePickerRange(
-                    id="date-range",
-                    start_date_placeholder_text="Start dato",
-                    end_date_placeholder_text="Slut dato",
-                    display_format="YYYY-MM-DD",
-                    className="mb-2",
+
+                dbc.InputGroup([
+                    dbc.InputGroupText("Periode"),
+                    dcc.DatePickerRange(
+                        id="date-range",
+                        start_date_placeholder_text="Start dato",
+                        end_date_placeholder_text="Slut dato",
+                        display_format="YYYY-MM-DD",
+                    ),
+                    dbc.Button("?", id="date-range-info-btn", color="secondary", outline=True),
+                ], className="mb-2"),
+                dbc.Popover(
+                    [dbc.PopoverHeader("Beregningperiode"),
+                     dbc.PopoverBody("Vælg start og slutdato for beregningen")],
+                    target="date-range-info-btn",
+                    trigger="click",
+                    placement="right",
                 ),
                 dbc.Button("Beregn", id="calculate", color="success", className="mb-4"),
                 html.H4("Simulator data", className="mt-4"),

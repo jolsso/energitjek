@@ -7,6 +7,7 @@ from modules.dmi_weather import start_periodic_fetch
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
+app.title = "Energitjek"
 server = app.server
 
 app.layout = dbc.Container(

@@ -1,33 +1,33 @@
 # energitjek
 
-[![Se README på GitHub](https://img.shields.io/badge/Se%20README%20p%C3%A5-GitHub-black?logo=github)](https://github.com/jolsso/energitjek/blob/main/README.md)
+[![View README on GitHub](https://img.shields.io/badge/See%20README%20on-GitHub-black?logo=github)](https://github.com/jolsso/energitjek/blob/main/README.md)
 
-Plotly Dash applikation til beregning af rentabilitet for private solceller.
+Plotly Dash application for calculating the profitability of residential solar panels.
 
-Brugeren uploader sit elforbrug fra eloverblik.dk og angiver en adresse.
-Backend geocoder adressen, estimerer forventet solcelleproduktion med PVlib
-og kombinerer dette med spotpriser og lokale tariffer. Resultaterne vises som
-grafer over produktion og økonomisk besparelse.
+Users upload their electricity consumption from eloverblik.dk and provide an address.
+The backend geocodes the address, estimates expected solar production using PVlib
+and combines this with spot prices and local tariffs. The results are presented as
+graphs showing production and financial savings.
 
-Applikationen lader dig vælge datoperiode for solcelleberegningen samt indstille
-anlægsstørrelse, retning og hældning direkte i sidepanelet.
+The application lets you choose a time period for the PV calculation and adjust the
+system size, orientation and tilt directly in the side panel.
 
-## Kørsel
+## Running the app
 
-1. Installer afhængigheder:
+1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-   Opret eventuelt en `.env`-fil med API-nøgler:
+   Optionally create a `.env` file with API tokens:
    ```bash
-   echo "DMI_TOKEN=din_token" > .env
+   echo "DMI_TOKEN=your_token" > .env
    ```
-2. Start applikationen:
+2. Start the application:
    ```bash
    python app.py
    ```
-   Herefter kører Dash serveren på `http://127.0.0.1:8050/`.
-3. (Valgfrit) Kør linting og tests:
+   The Dash server will then run on `http://127.0.0.1:8050/`.
+3. (Optional) Run linting and tests:
    ```bash
    ruff check .
    pytest -q
@@ -35,14 +35,14 @@ anlægsstørrelse, retning og hældning direkte i sidepanelet.
 
 ## Docker Compose
 
-Start applikationen med docker-compose, som både bygger billedet og
-kører containeren:
+Start the application using docker-compose, which builds the image and
+runs the container:
 ```bash
 docker-compose up --build
 ```
-Herefter kører Dash serveren på `http://127.0.0.1:8050/`.
+The Dash server will then run on `http://127.0.0.1:8050/`.
 
-Docker-compose mapper mappen `./cache` fra værtsmaskinen til `/app/cache` i
-containeren. Alle downloaded data gemmes derfor i `./cache`, hvilket bevarer
-cachen mellem genstart af containeren. Stien kan ændres ved at sætte
-miljøvariablen `CACHE_DIR`.
+Docker-compose maps the `./cache` folder from the host to `/app/cache` inside the
+container. All downloaded data is therefore stored in `./cache`, preserving the
+cache across container restarts. Change the path by setting the
+`CACHE_DIR` environment variable.

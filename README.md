@@ -9,6 +9,9 @@ Backend geocoder adressen, estimerer forventet solcelleproduktion med PVlib
 og kombinerer dette med spotpriser og lokale tariffer. Resultaterne vises som
 grafer over produktion og økonomisk besparelse.
 
+Applikationen lader dig vælge datoperiode for solcelleberegningen samt indstille
+anlægsstørrelse, retning og hældning direkte i sidepanelet.
+
 ## Kørsel
 
 1. Installer afhængigheder:

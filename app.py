@@ -94,6 +94,7 @@ app.layout = dbc.Container(
                     placement="right",
                 ),
 
+                html.H4("Beregning af rentabilitet", className="mt-4"),
                 dbc.InputGroup([
                     dbc.InputGroupText("Periode"),
                     dcc.DatePickerRange(
@@ -111,10 +112,7 @@ app.layout = dbc.Container(
                     trigger="click",
                     placement="right",
                 ),
-                dbc.Button("Beregn", id="calculate", color="success", className="mb-4"),
-                html.H4("Simulator data", className="mt-4"),
-                dcc.DatePickerSingle(id="sim-start", className="mb-2"),
-                dcc.DatePickerSingle(id="sim-end", className="mb-2"),
+                dbc.Button("Beregn", id="calculate", color="success", className="mb-2"),
                 dbc.Button("Simulér solcelleproduktion", id="simulate", color="info", className="mb-4"),
             ],
             md=3,
@@ -206,8 +204,8 @@ def run_calculation(n_clicks, consumption_contents, address, region, pv_size,
 @app.callback(
     Output('dmi-production-graph', 'figure'),
     Input('simulate', 'n_clicks'),
-    State('sim-start', 'date'),
-    State('sim-end', 'date'),
+    State('date-range', 'start_date'),
+    State('date-range', 'end_date'),
     State('pv-size', 'value'),
 )
 def run_simulation(n_clicks, start_date, end_date, pv_size):

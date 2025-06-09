@@ -7,23 +7,28 @@ from modules import dmi_weather
 
 
 def test_fetch_from_cache(tmp_path):
-    start = datetime(2024, 1, 1)
-    end = datetime(2024, 1, 2)
+    day = datetime(2024, 1, 1)
     cache_dir = tmp_path
-    cache_file = cache_dir / "06180_20240101_20240102.json"
+    cache_file = cache_dir / "06180_20240101.json"
     cache_dir.mkdir(exist_ok=True)
     cache_file.write_text(json.dumps([{"a": 1}]))
 
-    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir), \
-         mock.patch("modules.dmi_weather.requests.get") as req:
-        df = dmi_weather.fetch_observations("06180", start, end)
-        assert req.call_count == 0
+    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir):
+        df = dmi_weather.fetch_observations("06180", day, day)
+        assert df is not None
         assert len(df) == 1
 
 
-def test_fetch_downloads_and_caches(tmp_path):
-    start = datetime(2024, 1, 1)
-    end = datetime(2024, 1, 2)
+def test_fetch_missing_returns_none(tmp_path):
+    day = datetime(2024, 1, 1)
+    cache_dir = tmp_path
+    cache_dir.mkdir(exist_ok=True)
+    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir):
+        assert dmi_weather.fetch_observations("06180", day, day) is None
+
+
+def test_download_day(tmp_path):
+    day = datetime(2024, 1, 1).date()
     cache_dir = tmp_path
     cache_dir.mkdir(exist_ok=True)
     resp = mock.Mock()
@@ -32,49 +37,37 @@ def test_fetch_downloads_and_caches(tmp_path):
 
     with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir), \
          mock.patch("modules.dmi_weather.requests.get", return_value=resp) as req:
-        df = dmi_weather.fetch_observations("06180", start, end)
+        df = dmi_weather.download_day("06180", day)
         assert req.call_count == 1
-        cache_file = cache_dir / "06180_20240101_20240102.json"
+        cache_file = cache_dir / "06180_20240101.json"
         assert cache_file.exists()
         assert len(df) == 1
 
 
 def test_fetch_swaps_reversed_dates(tmp_path):
-    start = datetime(2024, 1, 2)
-    end = datetime(2024, 1, 1)
     cache_dir = tmp_path
     cache_dir.mkdir(exist_ok=True)
-    resp = mock.Mock()
-    resp.raise_for_status.return_value = None
-    resp.json.return_value = {"features": []}
+    (cache_dir / "06180_20240101.json").write_text("[]")
+    (cache_dir / "06180_20240102.json").write_text("[]")
 
-    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir), \
-         mock.patch("modules.dmi_weather.requests.get", return_value=resp) as req:
-        dmi_weather.fetch_observations("06180", start, end)
-        assert req.call_count == 1
-        params = req.call_args[1]["params"]
-        assert params["datetime"] == "2024-01-01T00:00:00Z/2024-01-02T00:00:00Z"
+    start = datetime(2024, 1, 2)
+    end = datetime(2024, 1, 1)
+
+    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir):
+        df = dmi_weather.fetch_observations("06180", start, end)
+        assert df is not None
 
 
 def test_fetch_replaces_bad_cache(tmp_path):
-    """Bad cache files should be ignored and replaced."""
-    start = datetime(2024, 1, 1)
-    end = datetime(2024, 1, 2)
+    day = datetime(2024, 1, 1)
     cache_dir = tmp_path
     cache_dir.mkdir(exist_ok=True)
-    cache_file = cache_dir / "06180_20240101_20240102.json"
+    cache_file = cache_dir / "06180_20240101.json"
     cache_file.write_text("{not valid json}")
 
-    resp = mock.Mock()
-    resp.raise_for_status.return_value = None
-    resp.json.return_value = {"features": [{"a": 2}]}
-
-    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir), \
-         mock.patch("modules.dmi_weather.requests.get", return_value=resp) as req:
-        df = dmi_weather.fetch_observations("06180", start, end)
-        assert req.call_count == 1
-        assert len(df) == 1
-        assert json.loads(cache_file.read_text()) == [{"a": 2}]
+    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir):
+        assert dmi_weather.fetch_observations("06180", day, day) is None
+        assert not cache_file.exists()
 
 
 def test_get_hourly_global_radiation():
@@ -89,3 +82,4 @@ def test_get_hourly_global_radiation():
         rad = dmi_weather.get_hourly_global_radiation("06180", start, end)
         assert rad is not None
         assert list(rad.values) == [100, 200]
+

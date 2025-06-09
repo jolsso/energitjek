@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import threading
 import time
 from datetime import datetime, timedelta
@@ -12,7 +13,8 @@ import requests
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://dmigw.govcloud.dk/v2/metObs/collections/observation/items"
-DMI_TOKEN = "<INSERT API TOKEN>"  # obtain from https://confluence.govcloud.dk/
+# Token can be provided via a .env file or environment variable
+DMI_TOKEN = os.getenv("DMI_TOKEN", "")
 CACHE_DIR = Path("cache")
 CACHE_DIR.mkdir(exist_ok=True)
 

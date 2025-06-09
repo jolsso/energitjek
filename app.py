@@ -15,6 +15,15 @@ app.layout = dbc.Container(
         dbc.Col(
             [
                 html.H2("Rentabilitetsberegner for solceller", className="mb-4"),
+                html.A(
+                    html.Img(
+                        src="https://img.shields.io/badge/README-GitHub-black?logo=github",
+                        alt="Se README på GitHub",
+                    ),
+                    href="https://github.com/<brugernavn>/energitjek/blob/main/README.md",
+                    target="_blank",
+                    className="mb-3 d-block",
+                ),
                 dcc.Upload(
                     id="upload-consumption",
                     children=dbc.Button("Upload elforbrug (CSV)", color="primary", className="mb-2"),

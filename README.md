@@ -24,14 +24,11 @@ grafer over produktion og økonomisk besparelse.
    pytest -q
    ```
 
-## Docker
+## Docker Compose
 
-1. Byg billedet:
-   ```bash
-   docker build -t energitjek .
-   ```
-2. Kør applikationen:
-   ```bash
-   docker run -p 8050:8050 energitjek
-   ```
-   Åbn derefter `http://127.0.0.1:8050/` i din browser.
+Start applikationen med docker-compose, som både bygger billedet og
+kører containeren:
+```bash
+docker-compose up --build
+```
+Herefter kører Dash serveren på `http://127.0.0.1:8050/`.

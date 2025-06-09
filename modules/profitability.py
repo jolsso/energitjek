@@ -1,4 +1,7 @@
+import logging
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_profitability(consumption: pd.DataFrame, production: pd.Series,

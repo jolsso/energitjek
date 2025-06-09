@@ -6,17 +6,41 @@ import pvlib
 
 logger = logging.getLogger(__name__)
 
+# Mapping from compass orientation to azimuth angle used by PVlib
+ORIENTATION_MAP = {
+    "N": 0,
+    "NE": 45,
+    "E": 90,
+    "SE": 135,
+    "S": 180,
+    "SW": 225,
+    "W": 270,
+    "NW": 315,
+}
 
-def estimate_production(lat: float, lon: float, pv_size_kwp: float,
-                        start: datetime, end: datetime) -> Optional[pd.Series]:
+
+def orientation_to_azimuth(orientation: str) -> float:
+    """Return PV azimuth angle for a compass orientation."""
+    return ORIENTATION_MAP.get(orientation, 180)
+
+
+def estimate_production(
+    lat: float,
+    lon: float,
+    pv_size_kwp: float,
+    start: datetime,
+    end: datetime,
+    tilt: float = 30,
+    azimuth: float = 180,
+) -> Optional[pd.Series]:
     """Estimate PV production using PVlib with simple clear-sky model."""
     try:
         location = pvlib.location.Location(lat, lon)
         times = pd.date_range(start, end, freq='1h', tz=location.tz)
         weather = location.get_clearsky(times)
         system = pvlib.pvsystem.PVSystem(
-            surface_tilt=30,
-            surface_azimuth=180,
+            surface_tilt=tilt,
+            surface_azimuth=azimuth,
             module_parameters={"pdc0": pv_size_kwp * 1000, "gamma_pdc": -0.004},
             inverter_parameters={"pdc0": pv_size_kwp * 1000},
             temperature_model_parameters=pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS['sapm']['open_rack_glass_glass'],

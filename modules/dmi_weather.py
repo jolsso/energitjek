@@ -47,6 +47,10 @@ def fetch_observations(
             return pd.json_normalize(records)
         except Exception as exc:
             logger.warning("Failed reading cache %s: %s", cache_file, exc)
+            try:
+                cache_file.unlink()
+            except OSError as rm_exc:  # pragma: no cover - unlikely to fail
+                logger.error("Failed removing corrupt cache %s: %s", cache_file, rm_exc)
 
     params = {
         "api-key": DMI_TOKEN,
@@ -68,8 +72,12 @@ def fetch_observations(
         logger.error("Downloading DMI observations failed: %s", exc)
         return None
 
-    with cache_file.open("w") as fh:
+    temp_file = cache_file.with_suffix(".tmp")
+    with temp_file.open("w") as fh:
         json.dump(records, fh)
+        fh.flush()
+        os.fsync(fh.fileno())
+    temp_file.replace(cache_file)
 
     return pd.json_normalize(records)
 

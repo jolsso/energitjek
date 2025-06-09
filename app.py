@@ -13,10 +13,12 @@ app.title = "Energitjek"
 server = app.server
 
 app.layout = dbc.Container(
-    dbc.Row([
-        dbc.Col(
-            [
-                html.H2("Rentabilitetsberegner for solceller", className="mb-4"),
+    [
+        dcc.Store(id="pv-settings-store", storage_type="local"),
+        dbc.Row([
+            dbc.Col(
+                [
+                    html.H2("Rentabilitetsberegner for solceller", className="mb-4"),
 
                 html.A(
                     html.Img(
@@ -132,8 +134,39 @@ app.layout = dbc.Container(
             md=9,
         ),
     ]),
+    ],
     fluid=True,
 )
+
+
+@app.callback(
+    Output("pv-settings-store", "data"),
+    Input("pv-size", "value"),
+    Input("pv-orientation", "value"),
+    Input("pv-tilt", "value"),
+    State("pv-settings-store", "data"),
+)
+def save_pv_settings(size, orientation, tilt, current):
+    data = {"pv_size": size, "orientation": orientation, "tilt": tilt}
+    if current == data:
+        raise dash.exceptions.PreventUpdate
+    return data
+
+
+@app.callback(
+    Output("pv-size", "value"),
+    Output("pv-orientation", "value"),
+    Output("pv-tilt", "value"),
+    Input("pv-settings-store", "data"),
+)
+def load_pv_settings(data):
+    if not data:
+        return dash.no_update, dash.no_update, dash.no_update
+    return (
+        data.get("pv_size", dash.no_update),
+        data.get("orientation", dash.no_update),
+        data.get("tilt", dash.no_update),
+    )
 
 
 @app.callback(

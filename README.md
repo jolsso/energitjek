@@ -44,5 +44,6 @@ The Dash server will then run on `http://127.0.0.1:8050/`.
 
 Docker-compose maps the `./cache` folder from the host to `/app/cache` inside the
 container. All downloaded data is therefore stored in `./cache`, preserving the
-cache across container restarts. Change the path by setting the
-`CACHE_DIR` environment variable.
+cache across container restarts. The repository includes this directory with a
+`.gitkeep` file so the volume works on a fresh clone. Change the path by setting
+the `CACHE_DIR` environment variable.

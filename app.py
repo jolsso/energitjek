@@ -16,9 +16,15 @@ days = available_cache_days("06180")
 if days:
     min_cache_day = days[0]
     max_cache_day = days[-1]
+    disabled_days = [
+        d.date().isoformat()
+        for d in pd.date_range(min_cache_day, max_cache_day)
+        if d.date() not in days
+    ]
 else:
     today = datetime.utcnow().date()
     min_cache_day = max_cache_day = today
+    disabled_days = []
 
 app.layout = dbc.Container(
     [
@@ -114,6 +120,7 @@ app.layout = dbc.Container(
                         end_date=max_cache_day,
                         min_date_allowed=min_cache_day,
                         max_date_allowed=max_cache_day,
+                        disabled_days=disabled_days,
                         start_date_placeholder_text="Start dato",
                         end_date_placeholder_text="Slut dato",
                         display_format="YYYY-MM-DD",

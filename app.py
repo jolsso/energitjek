@@ -118,8 +118,7 @@ app.layout = dbc.Container(
                     trigger="click",
                     placement="right",
                 ),
-                dbc.Button("Beregn", id="calculate", color="success", className="mb-2"),
-                dbc.Button("Simulér solcelleproduktion", id="simulate", color="info", className="mb-4"),
+                dbc.Button("Beregn", id="calculate", color="success", className="mb-4"),
             ],
             md=3,
         ),
@@ -146,14 +145,13 @@ app.layout = dbc.Container(
 @app.callback(
     Output("pv-settings-store", "data"),
     Input("calculate", "n_clicks"),
-    Input("simulate", "n_clicks"),
     State("pv-size", "value"),
     State("pv-orientation", "value"),
     State("pv-tilt", "value"),
     State("pv-settings-store", "data"),
 )
-def save_pv_settings(calc_clicks, sim_clicks, size, orientation, tilt, current):
-    if not calc_clicks and not sim_clicks:
+def save_pv_settings(calc_clicks, size, orientation, tilt, current):
+    if not calc_clicks:
         raise dash.exceptions.PreventUpdate
 
     data = {"pv_size": size, "orientation": orientation, "tilt": tilt}
@@ -225,6 +223,7 @@ def load_inputs(ts, data):  # noqa: ARG001
 @app.callback(
     Output('production-graph', 'figure'),
     Output('savings-graph', 'figure'),
+    Output('dmi-production-graph', 'figure'),
     Input('calculate', 'n_clicks'),
     State('upload-consumption', 'contents'),
     State('address', 'value'),
@@ -238,15 +237,15 @@ def load_inputs(ts, data):  # noqa: ARG001
 def run_calculation(n_clicks, consumption_contents, address, region, pv_size,
                     start_date, end_date, orientation, tilt):
     if not n_clicks:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
     consumption = data_loader.load_consumption(consumption_contents)
     if consumption is None:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
     coords = geocoding.geocode_address(address)
     if not coords:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
     lat, lon = coords
 
     start = pd.to_datetime(start_date) if start_date else consumption['time'].min()
@@ -265,7 +264,7 @@ def run_calculation(n_clicks, consumption_contents, address, region, pv_size,
         azimuth=azimuth,
     )
     if production is None:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
     prices = pricing.get_spot_prices(start, end)
     tariff = pricing.get_local_tariffs(region)
@@ -284,36 +283,24 @@ def run_calculation(n_clicks, consumption_contents, address, region, pv_size,
         ],
         'layout': {'title': 'Økonomisk besparelse'}
     }
-    return prod_fig, save_fig
-
-
-@app.callback(
-    Output('dmi-production-graph', 'figure'),
-    Input('simulate', 'n_clicks'),
-    State('date-range', 'start_date'),
-    State('date-range', 'end_date'),
-    State('pv-size', 'value'),
-)
-def run_simulation(n_clicks, start_date, end_date, pv_size):
-    if not n_clicks or not start_date or not end_date:
-        return dash.no_update
-
-    start = datetime.fromisoformat(start_date)
-    end = datetime.fromisoformat(end_date)
     radiation = dmi_weather.get_hourly_global_radiation("06180", start, end)
-    if radiation is None:
-        return dash.no_update
-    production = pvlib_calc.estimate_production_with_irradiance(radiation, pv_size)
-    if production is None:
-        return dash.no_update
+    if radiation is not None:
+        dmi_prod = pvlib_calc.estimate_production_with_irradiance(radiation, pv_size)
+    else:
+        dmi_prod = None
 
-    fig = {
-        'data': [
-            {'x': production.index, 'y': production, 'type': 'line', 'name': 'Simuleret PV'}
-        ],
-        'layout': {'title': 'DMI baseret produktion'}
-    }
-    return fig
+    if dmi_prod is not None:
+        dmi_fig = {
+            'data': [
+                {'x': dmi_prod.index, 'y': dmi_prod, 'type': 'line', 'name': 'Simuleret PV'}
+            ],
+            'layout': {'title': 'DMI baseret produktion'}
+        }
+    else:
+        dmi_fig = dash.no_update
+
+    return prod_fig, save_fig, dmi_fig
+
 
 
 if __name__ == '__main__':

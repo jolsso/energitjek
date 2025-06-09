@@ -25,7 +25,7 @@ app.layout = dbc.Container(
                         src="https://img.shields.io/badge/README-GitHub-black?logo=github",
                         alt="Se README på GitHub",
                     ),
-                    href="https://github.com/<brugernavn>/energitjek/blob/main/README.md",
+                    href="https://github.com/jolsso/energitjek/blob/main/README.md",
                     target="_blank",
                     className="mb-3 d-block",
                 ),

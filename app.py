@@ -71,4 +71,6 @@ def run_calculation(n_clicks, consumption_contents, address, region, pv_size):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    # Dash >=2.0 deprecates ``run_server`` in favor of ``run``.
+    # Bind to all interfaces so the app works inside Docker.
+    app.run(debug=True, host="0.0.0.0")

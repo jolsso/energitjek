@@ -200,9 +200,10 @@ def save_inputs(address, region, start_date, end_date, current):
     Output("region", "value"),
     Output("date-range", "start_date"),
     Output("date-range", "end_date"),
-    Input("input-store", "data"),
+    Input("input-store", "modified_timestamp"),
+    State("input-store", "data"),
 )
-def load_inputs(data):
+def load_inputs(ts, data):  # noqa: ARG001
     if not data:
         return (
             dash.no_update,

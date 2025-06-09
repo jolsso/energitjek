@@ -30,7 +30,14 @@ def fetch_observations(
     start: datetime,
     end: datetime,
 ) -> Optional[pd.DataFrame]:
-    """Download DMI observations if not cached and return as dataframe."""
+    """Download DMI observations if not cached and return as dataframe.
+
+    ``start`` and ``end`` may be provided in any order; if ``start`` is later
+    than ``end`` they are swapped before requesting data.
+    """
+    if start > end:
+        start, end = end, start
+
     cache_file = _cache_path(station_id, start, end)
     if cache_file.exists():
         try:

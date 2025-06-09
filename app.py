@@ -104,6 +104,7 @@ app.layout = dbc.Container(
                         id="date-range",
                         start_date="2024-01-01",
                         end_date="2024-12-31",
+                        max_date_allowed=datetime.utcnow().date(),
                         start_date_placeholder_text="Start dato",
                         end_date_placeholder_text="Slut dato",
                         display_format="YYYY-MM-DD",

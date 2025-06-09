@@ -1,25 +1,47 @@
 import dash
 from dash import html, dcc, Input, Output, State
+import dash_bootstrap_components as dbc
 
 from modules import data_loader, geocoding, pvlib_calc, pricing, profitability
 
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 server = app.server
 
-app.layout = html.Div([
-    html.H1("Rentabilitetsberegner for solceller"),
-    dcc.Upload(id='upload-consumption', children=html.Button('Upload elforbrug (CSV)')),
-    dcc.Input(id='address', type='text', placeholder='Adresse'),
-    dcc.Dropdown(id='region', options=[
-        {'label': 'Øst', 'value': 'east'},
-        {'label': 'Vest', 'value': 'west'},
-    ], placeholder='Vælg region'),
-    dcc.Input(id='pv-size', type='number', value=5, placeholder='kWp'),
-    html.Button('Beregn', id='calculate'),
-    dcc.Graph(id='production-graph'),
-    dcc.Graph(id='savings-graph'),
-])
+app.layout = dbc.Container(
+    dbc.Row([
+        dbc.Col(
+            [
+                html.H2("Rentabilitetsberegner for solceller", className="mb-4"),
+                dcc.Upload(
+                    id="upload-consumption",
+                    children=dbc.Button("Upload elforbrug (CSV)", color="primary", className="mb-2"),
+                ),
+                dbc.Input(id="address", type="text", placeholder="Adresse", className="mb-2"),
+                dbc.Select(
+                    id="region",
+                    options=[{"label": "Øst", "value": "east"}, {"label": "Vest", "value": "west"}],
+                    placeholder="Vælg region",
+                    className="mb-2",
+                ),
+                dbc.Input(id="pv-size", type="number", value=5, placeholder="kWp", className="mb-2"),
+                dbc.Button("Beregn", id="calculate", color="success", className="mb-4"),
+            ],
+            md=3,
+        ),
+        dbc.Col(
+            [
+                dbc.Row(
+                    dbc.Col(dbc.Card(dcc.Graph(id="production-graph"), body=True), width=12),
+                    className="mb-4",
+                ),
+                dbc.Row(dbc.Col(dbc.Card(dcc.Graph(id="savings-graph"), body=True), width=12)),
+            ],
+            md=9,
+        ),
+    ]),
+    fluid=True,
+)
 
 
 @app.callback(

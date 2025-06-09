@@ -5,12 +5,20 @@ import dash_bootstrap_components as dbc
 from datetime import datetime
 
 from modules import data_loader, geocoding, pvlib_calc, pricing, profitability, dmi_weather
-from modules.dmi_weather import start_periodic_fetch
+from modules.dmi_weather import available_cache_days, start_periodic_fetch
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 app.title = "Energitjek"
 server = app.server
+
+days = available_cache_days("06180")
+if days:
+    min_cache_day = days[0]
+    max_cache_day = days[-1]
+else:
+    today = datetime.utcnow().date()
+    min_cache_day = max_cache_day = today
 
 app.layout = dbc.Container(
     [
@@ -102,9 +110,10 @@ app.layout = dbc.Container(
                     dbc.InputGroupText("Periode"),
                     dcc.DatePickerRange(
                         id="date-range",
-                        start_date="2024-01-01",
-                        end_date="2024-12-31",
-                        max_date_allowed=datetime.utcnow().date(),
+                        start_date=min_cache_day,
+                        end_date=max_cache_day,
+                        min_date_allowed=min_cache_day,
+                        max_date_allowed=max_cache_day,
                         start_date_placeholder_text="Start dato",
                         end_date_placeholder_text="Slut dato",
                         display_format="YYYY-MM-DD",

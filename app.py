@@ -1,6 +1,5 @@
 import dash
 from dash import html, dcc, Input, Output, State
-import pandas as pd
 
 from modules import data_loader, geocoding, pvlib_calc, pricing, profitability
 

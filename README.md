@@ -1,5 +1,7 @@
 # energitjek
 
+[![Se README på GitHub](https://img.shields.io/badge/Se%20README%20p%C3%A5-GitHub-black?logo=github)](https://github.com/<brugernavn>/energitjek/blob/main/README.md)
+
 Plotly Dash applikation til beregning af rentabilitet for private solceller.
 
 Brugeren uploader sit elforbrug fra eloverblik.dk og angiver en adresse.

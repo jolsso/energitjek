@@ -1,7 +1,10 @@
 import base64
 import io
+import logging
 from typing import Optional
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 def load_consumption(contents: str) -> Optional[pd.DataFrame]:
     """Parse CSV content from Dash upload component."""
@@ -14,5 +17,5 @@ def load_consumption(contents: str) -> Optional[pd.DataFrame]:
         df['time'] = pd.to_datetime(df['time'])
         return df
     except Exception as exc:
-        print(f"Failed to parse consumption data: {exc}")
+        logger.exception("Failed to parse consumption data: %s", exc)
         return None

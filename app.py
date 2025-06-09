@@ -1,8 +1,9 @@
 import dash
 from dash import html, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
+from datetime import datetime
 
-from modules import data_loader, geocoding, pvlib_calc, pricing, profitability
+from modules import data_loader, geocoding, pvlib_calc, pricing, profitability, dmi_weather
 from modules.dmi_weather import start_periodic_fetch
 
 
@@ -28,6 +29,10 @@ app.layout = dbc.Container(
                 ),
                 dbc.Input(id="pv-size", type="number", value=5, placeholder="kWp", className="mb-2"),
                 dbc.Button("Beregn", id="calculate", color="success", className="mb-4"),
+                html.H4("Simulator data", className="mt-4"),
+                dcc.DatePickerSingle(id="sim-start", className="mb-2"),
+                dcc.DatePickerSingle(id="sim-end", className="mb-2"),
+                dbc.Button("Simulér solcelleproduktion", id="simulate", color="info", className="mb-4"),
             ],
             md=3,
         ),
@@ -38,6 +43,10 @@ app.layout = dbc.Container(
                     className="mb-4",
                 ),
                 dbc.Row(dbc.Col(dbc.Card(dcc.Graph(id="savings-graph"), body=True), width=12)),
+                dbc.Row(
+                    dbc.Col(dbc.Card(dcc.Graph(id="dmi-production-graph"), body=True), width=12),
+                    className="mt-4",
+                ),
             ],
             md=9,
         ),
@@ -92,6 +101,35 @@ def run_calculation(n_clicks, consumption_contents, address, region, pv_size):
         'layout': {'title': 'Økonomisk besparelse'}
     }
     return prod_fig, save_fig
+
+
+@app.callback(
+    Output('dmi-production-graph', 'figure'),
+    Input('simulate', 'n_clicks'),
+    State('sim-start', 'date'),
+    State('sim-end', 'date'),
+    State('pv-size', 'value'),
+)
+def run_simulation(n_clicks, start_date, end_date, pv_size):
+    if not n_clicks or not start_date or not end_date:
+        return dash.no_update
+
+    start = datetime.fromisoformat(start_date)
+    end = datetime.fromisoformat(end_date)
+    radiation = dmi_weather.get_hourly_global_radiation("06180", start, end)
+    if radiation is None:
+        return dash.no_update
+    production = pvlib_calc.estimate_production_with_irradiance(radiation, pv_size)
+    if production is None:
+        return dash.no_update
+
+    fig = {
+        'data': [
+            {'x': production.index, 'y': production, 'type': 'line', 'name': 'Simuleret PV'}
+        ],
+        'layout': {'title': 'DMI baseret produktion'}
+    }
+    return fig
 
 
 if __name__ == '__main__':

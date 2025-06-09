@@ -74,3 +74,33 @@ def start_periodic_fetch(station_id: str, interval_hours: int = 24) -> threading
     thread = threading.Thread(target=_worker, daemon=True)
     thread.start()
     return thread
+
+
+def get_hourly_global_radiation(
+    station_id: str,
+    start: datetime,
+    end: datetime,
+) -> Optional[pd.Series]:
+    """Return hourly global radiation for a period.
+
+    The function downloads observations and extracts values for the
+    ``globalRadiation`` parameter. The returned series has naive datetime
+    indices in hourly resolution.
+    """
+
+    df = fetch_observations(station_id, start, end)
+    if df is None:
+        return None
+    try:
+        mask = df.get("properties.parameterId") == "globalRadiation"
+        df = df[mask]
+        df["time"] = pd.to_datetime(df["properties.observed"], errors="coerce")
+        df = df.dropna(subset=["time"])  # type: ignore[call-arg]
+        df = df.set_index("time").sort_index()
+        df["value"] = pd.to_numeric(df["properties.value"], errors="coerce")
+        radiation = df["value"].resample("1h").mean()
+        radiation.index = radiation.index.tz_localize(None)
+        return radiation
+    except Exception as exc:  # pragma: no cover - parsing failures rare
+        logger.error("Failed parsing DMI observations: %s", exc)
+        return None

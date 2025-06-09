@@ -47,6 +47,12 @@ def fetch_observations(
         "stationId": station_id,
         "datetime": f"{start.isoformat()}Z/{end.isoformat()}Z",
     }
+    logger.info(
+        "Fetching DMI observations for %s from %s to %s",
+        station_id,
+        start.isoformat(),
+        end.isoformat(),
+    )
     try:
         resp = requests.get(BASE_URL, params=params, timeout=20)
         resp.raise_for_status()

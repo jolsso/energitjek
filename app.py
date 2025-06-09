@@ -102,6 +102,8 @@ app.layout = dbc.Container(
                     dbc.InputGroupText("Periode"),
                     dcc.DatePickerRange(
                         id="date-range",
+                        start_date="2024-01-01",
+                        end_date="2024-12-31",
                         start_date_placeholder_text="Start dato",
                         end_date_placeholder_text="Slut dato",
                         display_format="YYYY-MM-DD",

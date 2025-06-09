@@ -141,12 +141,17 @@ app.layout = dbc.Container(
 
 @app.callback(
     Output("pv-settings-store", "data"),
-    Input("pv-size", "value"),
-    Input("pv-orientation", "value"),
-    Input("pv-tilt", "value"),
+    Input("calculate", "n_clicks"),
+    Input("simulate", "n_clicks"),
+    State("pv-size", "value"),
+    State("pv-orientation", "value"),
+    State("pv-tilt", "value"),
     State("pv-settings-store", "data"),
 )
-def save_pv_settings(size, orientation, tilt, current):
+def save_pv_settings(calc_clicks, sim_clicks, size, orientation, tilt, current):
+    if not calc_clicks and not sim_clicks:
+        raise dash.exceptions.PreventUpdate
+
     data = {"pv_size": size, "orientation": orientation, "tilt": tilt}
     if current == data:
         raise dash.exceptions.PreventUpdate

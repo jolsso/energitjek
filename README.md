@@ -13,6 +13,10 @@ grafer over produktion og økonomisk besparelse.
    ```bash
    pip install -r requirements.txt
    ```
+   Opret eventuelt en `.env`-fil med API-nøgler:
+   ```bash
+   echo "DMI_TOKEN=din_token" > .env
+   ```
 2. Start applikationen:
    ```bash
    python app.py

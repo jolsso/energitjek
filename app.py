@@ -28,8 +28,6 @@ app.layout = dbc.Container(
                     className="mb-3 d-block",
                 ),
 
-                dcc.DatePickerRange(id="date-range", className="mb-2"),
-
                 dcc.Upload(
                     id="upload-consumption",
                     children=dbc.Button("Upload elforbrug (CSV)", color="primary", className="mb-2"),

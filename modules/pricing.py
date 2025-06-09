@@ -1,5 +1,8 @@
 from datetime import datetime
+import logging
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def get_spot_prices(start: datetime, end: datetime) -> pd.Series:

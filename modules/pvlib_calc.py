@@ -1,7 +1,10 @@
 from datetime import datetime
 from typing import Optional
+import logging
 import pandas as pd
 import pvlib
+
+logger = logging.getLogger(__name__)
 
 
 def estimate_production(lat: float, lon: float, pv_size_kwp: float,
@@ -24,5 +27,5 @@ def estimate_production(lat: float, lon: float, pv_size_kwp: float,
         ac.index = ac.index.tz_localize(None)
         return ac
     except Exception as exc:
-        print(f"PVlib estimation failed: {exc}")
+        logger.exception("PVlib estimation failed: %s", exc)
         return None

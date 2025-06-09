@@ -1,5 +1,8 @@
+import logging
 import requests
 from typing import Tuple, Optional
+
+logger = logging.getLogger(__name__)
 
 USER_AGENT = "energitjek-app"
 
@@ -22,5 +25,5 @@ def geocode_address(address: str) -> Optional[Tuple[float, float]]:
         first = results[0]
         return float(first['lat']), float(first['lon'])
     except Exception as exc:
-        print(f"Geocoding failed: {exc}")
+        logger.exception("Geocoding failed: %s", exc)
         return None

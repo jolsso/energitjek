@@ -64,6 +64,13 @@ app.layout = dbc.Container(
                     placeholder="Hældning (grader)",
                     className="mb-2",
                 ),
+                dcc.DatePickerRange(
+                    id="date-range",
+                    start_date_placeholder_text="Start dato",
+                    end_date_placeholder_text="Slut dato",
+                    display_format="YYYY-MM-DD",
+                    className="mb-2",
+                ),
                 dbc.Button("Beregn", id="calculate", color="success", className="mb-4"),
                 html.H4("Simulator data", className="mt-4"),
                 dcc.DatePickerSingle(id="sim-start", className="mb-2"),

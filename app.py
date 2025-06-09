@@ -15,6 +15,7 @@ server = app.server
 app.layout = dbc.Container(
     [
         dcc.Store(id="pv-settings-store", storage_type="local"),
+        dcc.Store(id="input-store", storage_type="local"),
         dbc.Row([
             dbc.Col(
                 [
@@ -171,6 +172,49 @@ def load_pv_settings(data):
         data.get("pv_size", dash.no_update),
         data.get("orientation", dash.no_update),
         data.get("tilt", dash.no_update),
+    )
+
+
+@app.callback(
+    Output("input-store", "data"),
+    Input("address", "value"),
+    Input("region", "value"),
+    Input("date-range", "start_date"),
+    Input("date-range", "end_date"),
+    State("input-store", "data"),
+)
+def save_inputs(address, region, start_date, end_date, current):
+    data = {
+        "address": address,
+        "region": region,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+    if current == data:
+        raise dash.exceptions.PreventUpdate
+    return data
+
+
+@app.callback(
+    Output("address", "value"),
+    Output("region", "value"),
+    Output("date-range", "start_date"),
+    Output("date-range", "end_date"),
+    Input("input-store", "data"),
+)
+def load_inputs(data):
+    if not data:
+        return (
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+        )
+    return (
+        data.get("address", dash.no_update),
+        data.get("region", dash.no_update),
+        data.get("start_date", dash.no_update),
+        data.get("end_date", dash.no_update),
     )
 
 

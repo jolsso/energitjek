@@ -5,3 +5,7 @@ services:
     ports:
       - "8050:8050"
     command: python app.py
+    volumes:
+      - ./cache:/app/cache
+    environment:
+      - CACHE_DIR=/app/cache

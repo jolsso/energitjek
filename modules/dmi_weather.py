@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://dmigw.govcloud.dk/v2/metObs/collections/observation/items"
 # Token can be provided via a .env file or environment variable
 DMI_TOKEN = os.getenv("DMI_TOKEN", "")
-CACHE_DIR = Path("cache")
+# Allow overriding the cache directory through an environment variable.
+CACHE_DIR = Path(os.getenv("CACHE_DIR", "cache"))
 CACHE_DIR.mkdir(exist_ok=True)
 
 

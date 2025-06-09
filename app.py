@@ -3,6 +3,7 @@ from dash import html, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
 
 from modules import data_loader, geocoding, pvlib_calc, pricing, profitability
+from modules.dmi_weather import start_periodic_fetch
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
@@ -95,4 +96,6 @@ def run_calculation(n_clicks, consumption_contents, address, region, pv_size):
 if __name__ == '__main__':
     # Dash >=2.0 deprecates ``run_server`` in favor of ``run``.
     # Bind to all interfaces so the app works inside Docker.
+    # Start periodic fetching of DMI observations in the background
+    start_periodic_fetch("06180")
     app.run(debug=True, host="0.0.0.0")

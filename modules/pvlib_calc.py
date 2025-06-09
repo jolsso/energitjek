@@ -29,3 +29,20 @@ def estimate_production(lat: float, lon: float, pv_size_kwp: float,
     except Exception as exc:
         logger.exception("PVlib estimation failed: %s", exc)
         return None
+
+
+def estimate_production_with_irradiance(
+    ghi: pd.Series,
+    pv_size_kwp: float,
+) -> Optional[pd.Series]:
+    """Estimate PV production from GHI using a simple linear model."""
+    if ghi is None or ghi.empty:
+        return None
+    try:
+        ghi = ghi.resample("1h").mean()
+        production = pv_size_kwp * (ghi / 1000.0)
+        production.index = production.index.tz_localize(None)
+        return production
+    except Exception as exc:  # pragma: no cover - rare failure
+        logger.exception("PVlib irradiance estimation failed: %s", exc)
+        return None

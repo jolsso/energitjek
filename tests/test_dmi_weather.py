@@ -56,6 +56,27 @@ def test_fetch_swaps_reversed_dates(tmp_path):
         assert params["datetime"] == "2024-01-01T00:00:00Z/2024-01-02T00:00:00Z"
 
 
+def test_fetch_replaces_bad_cache(tmp_path):
+    """Bad cache files should be ignored and replaced."""
+    start = datetime(2024, 1, 1)
+    end = datetime(2024, 1, 2)
+    cache_dir = tmp_path
+    cache_dir.mkdir(exist_ok=True)
+    cache_file = cache_dir / "06180_20240101_20240102.json"
+    cache_file.write_text("{not valid json}")
+
+    resp = mock.Mock()
+    resp.raise_for_status.return_value = None
+    resp.json.return_value = {"features": [{"a": 2}]}
+
+    with mock.patch("modules.dmi_weather.CACHE_DIR", cache_dir), \
+         mock.patch("modules.dmi_weather.requests.get", return_value=resp) as req:
+        df = dmi_weather.fetch_observations("06180", start, end)
+        assert req.call_count == 1
+        assert len(df) == 1
+        assert json.loads(cache_file.read_text()) == [{"a": 2}]
+
+
 def test_get_hourly_global_radiation():
     df = pd.DataFrame({
         "properties.parameterId": ["globalRadiation", "globalRadiation"],

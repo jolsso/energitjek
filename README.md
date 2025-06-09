@@ -41,3 +41,8 @@ kører containeren:
 docker-compose up --build
 ```
 Herefter kører Dash serveren på `http://127.0.0.1:8050/`.
+
+Docker-compose mapper mappen `./cache` fra værtsmaskinen til `/app/cache` i
+containeren. Alle downloaded data gemmes derfor i `./cache`, hvilket bevarer
+cachen mellem genstart af containeren. Stien kan ændres ved at sætte
+miljøvariablen `CACHE_DIR`.

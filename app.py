@@ -30,6 +30,7 @@ app.layout = dbc.Container(
     [
         dcc.Store(id="pv-settings-store", storage_type="local"),
         dcc.Store(id="input-store", storage_type="local"),
+        dcc.Interval(id="dmi-cache-refresh", interval=3600*1000),
         dbc.Row([
             dbc.Col(
                 [
@@ -234,6 +235,27 @@ def load_inputs(ts, data):  # noqa: ARG001
         data.get("start_date", dash.no_update),
         data.get("end_date", dash.no_update),
     )
+
+
+@app.callback(
+    Output("date-range", "disabled_days"),
+    Output("date-range", "min_date_allowed"),
+    Output("date-range", "max_date_allowed"),
+    Input("dmi-cache-refresh", "n_intervals"),
+)
+def refresh_datepicker(_):
+    days = available_cache_days("06180")
+    if not days:
+        today = datetime.utcnow().date()
+        return [], today, today
+    min_day = days[0]
+    max_day = days[-1]
+    disabled = [
+        d.date().isoformat()
+        for d in pd.date_range(min_day, max_day)
+        if d.date() not in days
+    ]
+    return disabled, min_day, max_day
 
 
 @app.callback(

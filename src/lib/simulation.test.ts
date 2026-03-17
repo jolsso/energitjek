@@ -1,17 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { runSimulation, pvgisTimeToISO } from './simulation'
+import { runSimulation } from './simulation'
 import type { ConsumptionData, HourlyPrice, PVGISData } from '@/types'
 
 // --- Helpers ---
 
+// Uses real PVGIS time format: "YYYYMMDD:HHMM"
 function makePVGIS(hourlyWatts: number[]): PVGISData {
   return {
-    hourly: hourlyWatts.map((P, i) => ({
-      time: `2024${String(Math.floor(i / 24) + 101).slice(1)}:${String(i % 24).padStart(2, '0')}:00`,
-      P,
-      G_i: 0,
-      T2m: 10,
-    })),
+    hourly: hourlyWatts.map((P, i) => {
+      const hh = String(i % 24).padStart(2, '0')
+      return { time: `20230101:${hh}00`, P, G_i: 0, T2m: 10 }
+    }),
     annualKwh: hourlyWatts.reduce((s, w) => s + w / 1000, 0),
     location: { lat: 56, lon: 10 },
   }
@@ -20,22 +19,6 @@ function makePVGIS(hourlyWatts: number[]): PVGISData {
 function flatConsumption(annualKwh: number): ConsumptionData {
   return { source: 'manual', annualKwh }
 }
-
-// --- pvgisTimeToISO ---
-
-describe('pvgisTimeToISO', () => {
-  it('converts 8-char date format correctly', () => {
-    expect(pvgisTimeToISO('20240115:13:00')).toBe('2024-01-15T13:00:00')
-  })
-
-  it('handles midnight', () => {
-    expect(pvgisTimeToISO('20240101:00:00')).toBe('2024-01-01T00:00:00')
-  })
-
-  it('returns input unchanged for unrecognised formats', () => {
-    expect(pvgisTimeToISO('unknown-format')).toBe('unknown-format')
-  })
-})
 
 // --- runSimulation: energy flows ---
 

@@ -7,6 +7,7 @@ import type {
   SimulationSummary,
 } from '@/types'
 import { EUR_TO_DKK } from './energidataservice'
+import { pvgisTimeToISO } from './pvgis'
 
 /**
  * Flat electricity retail price in DKK/kWh used when spot price data is
@@ -108,15 +109,3 @@ function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number
   }
 }
 
-/** Converts PVGIS time format "YYYYMMDD:HH:MM" to ISO 8601 */
-export function pvgisTimeToISO(time: string): string {
-  // Format: "20XX:MMDD:HH:MM" or "YYYYMMDD:HH:MM"
-  const [datePart, hh, mm] = time.split(':')
-  if (datePart.length === 8) {
-    const y = datePart.slice(0, 4)
-    const mo = datePart.slice(4, 6)
-    const d = datePart.slice(6, 8)
-    return `${y}-${mo}-${d}T${hh}:${mm}:00`
-  }
-  return time
-}

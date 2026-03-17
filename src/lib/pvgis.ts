@@ -5,12 +5,15 @@ import type { Coordinates, PVGISData, SolarConfig } from '@/types'
 // PVGIS does not send CORS headers so direct browser requests are blocked.
 const PVGIS_BASE = '/api/pvgis'
 
+// Most recent year with confirmed full data in PVGIS
+const DATA_YEAR = 2023
+
 /**
- * Fetches hourly PV production data from PVGIS (EU Commission).
- * Free, no API key required, CORS-enabled.
+ * Fetches hourly PV production data for a single year from PVGIS (EU Commission).
+ * Free, no API key required.
  *
- * Uses a "typical meteorological year" (TMY) to give a representative
- * annual production profile regardless of selected year.
+ * seriescalc returns hourly rows with format: { time: "YYYYMMDD:HHMM", P: W, "G(i)": W/m², ... }
+ * No totals field — annual kWh is summed from hourly P values.
  */
 export async function fetchPVGISData(
   coords: Coordinates,
@@ -23,13 +26,14 @@ export async function fetchPVGISData(
     loss: config.systemLossPct.toString(),
     angle: config.tiltDeg.toString(),
     aspect: config.azimuthDeg.toString(),
+    startyear: DATA_YEAR.toString(),
+    endyear: DATA_YEAR.toString(),
     outputformat: 'json',
     browser: '1',
     usehorizon: '1',
     pvcalculation: '1',
     pvtechchoice: 'crystSi',
     mountingplace: 'building',
-    components: '1',
   })
 
   const res = await fetch(`${PVGIS_BASE}/seriescalc?${params}`)
@@ -45,7 +49,28 @@ export async function fetchPVGISData(
     T2m: row.T2m as number,
   }))
 
-  const annualKwh: number = json.outputs.totals.fixed.E_y
+  // seriescalc has no totals field — derive annual kWh from hourly P (W → kWh)
+  const annualKwh = hourly.reduce((sum: number, h: { P: number }) => sum + h.P / 1000, 0)
 
   return { hourly, annualKwh, location: coords }
+}
+
+/**
+ * Converts PVGIS time format "YYYYMMDD:HHMM" to ISO 8601.
+ * Real API format: datePart is 8 chars, timePart is 4 chars (HHMM).
+ * Example: "20230615:1411" → "2023-06-15T14:11:00"
+ */
+export function pvgisTimeToISO(time: string): string {
+  const colonIdx = time.indexOf(':')
+  if (colonIdx === 8) {
+    const datePart = time.slice(0, 8)
+    const timePart = time.slice(9)   // HHMM
+    const y = datePart.slice(0, 4)
+    const mo = datePart.slice(4, 6)
+    const d = datePart.slice(6, 8)
+    const hh = timePart.slice(0, 2)
+    const mm = timePart.slice(2, 4)
+    return `${y}-${mo}-${d}T${hh}:${mm}:00`
+  }
+  return time
 }

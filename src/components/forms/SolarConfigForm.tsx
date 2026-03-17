@@ -40,16 +40,16 @@ function SliderField({ label, value, min, max, step, unit, description, onChange
 function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
   const rad = (tiltDeg * Math.PI) / 180
   // Panel: pivot at bottom-left corner, rotates upward to the right
-  const px = 28, py = 68   // pivot point (bottom-left of panel)
-  const panelW = 90, panelH = 6
+  const px = 36, py = 130  // pivot point (bottom-left of panel)
+  const panelW = 150, panelH = 10
 
   // Angle arc
-  const arcR = 22
+  const arcR = 38
   const arcEndX = px + arcR * Math.cos(rad)
   const arcEndY = py - arcR * Math.sin(rad)
 
   // Label at midpoint of arc
-  const labelR = arcR + 12
+  const labelR = arcR + 18
   const labelX = px + labelR * Math.cos(rad / 2)
   const labelY = py - labelR * Math.sin(rad / 2)
 
@@ -57,17 +57,17 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
   const cellDividers = [1, 2, 3, 4, 5]
 
   return (
-    <svg viewBox="0 0 200 80" className="w-full h-14 mt-1">
-      {/* Ground line — uses theme border color via CSS variable */}
+    <svg viewBox="0 0 320 145" className="w-full h-28 mt-1">
+      {/* Ground line */}
       <line
-        x1="0" y1={py + 2} x2="200" y2={py + 2}
-        style={{ stroke: 'hsl(var(--border))' }} strokeWidth="1"
+        x1="0" y1={py + 3} x2="320" y2={py + 3}
+        style={{ stroke: 'hsl(var(--border))' }} strokeWidth="1.5"
       />
 
-      {/* Sun — soft glow using primary color */}
-      <circle cx="178" cy="16" r="10"
+      {/* Sun — soft glow */}
+      <circle cx="290" cy="26" r="18"
         style={{ fill: 'hsl(var(--primary))' }} opacity="0.12" />
-      <circle cx="178" cy="16" r="6"
+      <circle cx="290" cy="26" r="10"
         style={{ fill: 'hsl(var(--primary))' }} opacity="0.9" />
 
       {/* Angle arc */}
@@ -76,16 +76,16 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
           d={`M ${px + arcR} ${py} A ${arcR} ${arcR} 0 0 0 ${arcEndX} ${arcEndY}`}
           fill="none"
           style={{ stroke: 'hsl(var(--primary))' }}
-          strokeWidth="1"
+          strokeWidth="1.5"
           opacity="0.45"
         />
       )}
 
       {/* Angle label */}
-      {tiltDeg > 8 && (
+      {tiltDeg > 6 && (
         <text
           x={labelX} y={labelY}
-          fontSize="9"
+          fontSize="13"
           style={{ fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter, system-ui, sans-serif' }}
           textAnchor="middle" dominantBaseline="middle"
         >
@@ -97,7 +97,7 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
       <g transform={`rotate(${-tiltDeg} ${px} ${py})`}>
         {/* Panel body */}
         <rect
-          x={px} y={py - panelH} width={panelW} height={panelH} rx="1.5"
+          x={px} y={py - panelH} width={panelW} height={panelH} rx="2.5"
           fill="#1e3a5f"
         />
         {/* Subtle cell grid */}
@@ -106,18 +106,18 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
             key={i}
             x1={px + (panelW / 6) * i} y1={py - panelH}
             x2={px + (panelW / 6) * i} y2={py}
-            stroke="#60a5fa" strokeWidth="0.5" opacity="0.3"
+            stroke="#60a5fa" strokeWidth="0.7" opacity="0.3"
           />
         ))}
         {/* Top-edge highlight */}
         <line
-          x1={px + 2} y1={py - panelH + 1} x2={px + panelW - 2} y2={py - panelH + 1}
-          stroke="#93c5fd" strokeWidth="0.6" opacity="0.25" strokeLinecap="round"
+          x1={px + 3} y1={py - panelH + 1.5} x2={px + panelW - 3} y2={py - panelH + 1.5}
+          stroke="#93c5fd" strokeWidth="1" opacity="0.25" strokeLinecap="round"
         />
       </g>
 
       {/* Pivot dot */}
-      <circle cx={px} cy={py} r="2"
+      <circle cx={px} cy={py} r="3"
         style={{ fill: 'hsl(var(--muted-foreground))' }} opacity="0.4"
       />
     </svg>

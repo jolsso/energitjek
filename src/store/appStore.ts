@@ -17,6 +17,7 @@ interface AppState {
   solarConfig: SolarConfig
   consumption: ConsumptionData
   priceArea: PriceArea
+  investmentDkk: number
 
   // Fetched data (not persisted — refetched as needed)
   pvgisData: PVGISData | null
@@ -29,6 +30,7 @@ interface AppState {
   setSolarConfig: (config: Partial<SolarConfig>) => void
   setConsumption: (consumption: Partial<ConsumptionData> & { hourlyKwh?: number[] | undefined }) => void
   setPriceArea: (area: PriceArea) => void
+  setInvestmentDkk: (dkk: number) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
   reset: () => void
@@ -55,6 +57,7 @@ export const useAppStore = create<AppState>()(
       solarConfig: DEFAULT_SOLAR_CONFIG,
       consumption: DEFAULT_CONSUMPTION,
       priceArea: 'DK2',
+      investmentDkk: 0,
       pvgisData: null,
       simulationResult: null,
 
@@ -66,6 +69,7 @@ export const useAppStore = create<AppState>()(
       setConsumption: (consumption) =>
         set((s) => ({ consumption: { ...s.consumption, ...consumption } })),
       setPriceArea: (priceArea) => set({ priceArea }),
+      setInvestmentDkk: (investmentDkk) => set({ investmentDkk }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
       reset: () =>
@@ -76,6 +80,7 @@ export const useAppStore = create<AppState>()(
           solarConfig: DEFAULT_SOLAR_CONFIG,
           consumption: DEFAULT_CONSUMPTION,
           priceArea: 'DK2',
+          investmentDkk: 0,
           pvgisData: null,
           simulationResult: null,
         }),
@@ -88,6 +93,7 @@ export const useAppStore = create<AppState>()(
         postcode: s.postcode,
         solarConfig: s.solarConfig,
         priceArea: s.priceArea,
+        investmentDkk: s.investmentDkk,
         consumption: {
           source: s.consumption.source,
           annualKwh: s.consumption.annualKwh,

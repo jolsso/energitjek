@@ -2,9 +2,10 @@ import { useAppStore } from '@/store/appStore'
 import { SummaryCards } from './SummaryCards'
 import { MonthlyChart } from './MonthlyChart'
 import { MonthlySavingsChart } from './MonthlySavingsChart'
+import { PaybackChart } from './PaybackChart'
 
 export function ResultsPanel() {
-  const { simulationResult, pvgisData } = useAppStore()
+  const { simulationResult, pvgisData, investmentDkk } = useAppStore()
 
   if (!simulationResult) return null
 
@@ -32,9 +33,15 @@ export function ResultsPanel() {
         </div>
       </div>
 
-      <SummaryCards summary={simulationResult.summary} />
+      <SummaryCards summary={simulationResult.summary} investmentDkk={investmentDkk} />
       <MonthlyChart hourly={simulationResult.hourly} />
       <MonthlySavingsChart hourly={simulationResult.hourly} />
+      {investmentDkk > 0 && (
+        <PaybackChart
+          investmentDkk={investmentDkk}
+          annualSavedDkk={simulationResult.summary.annualSavedDkk}
+        />
+      )}
     </div>
   )
 }

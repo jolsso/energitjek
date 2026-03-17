@@ -1,12 +1,17 @@
-import { Zap, Sun, TrendingDown, Percent } from 'lucide-react'
+import { Zap, Sun, TrendingDown, Percent, CalendarClock } from 'lucide-react'
 import type { SimulationSummary } from '@/types'
 import { formatDkk, formatKwh, formatPct } from '@/lib/utils'
 
 interface Props {
   summary: SimulationSummary
+  investmentDkk?: number
 }
 
-export function SummaryCards({ summary }: Props) {
+export function SummaryCards({ summary, investmentDkk = 0 }: Props) {
+  const paybackYears = investmentDkk > 0 && summary.annualSavedDkk > 0
+    ? investmentDkk / summary.annualSavedDkk
+    : null
+
   const cards = [
     {
       icon: Sun,
@@ -32,10 +37,16 @@ export function SummaryCards({ summary }: Props) {
       value: formatDkk(summary.annualSavedDkk),
       sub: 'Pr. år (ekskl. feed-in)',
     },
+    ...(paybackYears != null ? [{
+      icon: CalendarClock,
+      label: 'Tilbagebetalingstid',
+      value: `${paybackYears.toFixed(1).replace('.', ',')} år`,
+      sub: `Ved investering på ${investmentDkk.toLocaleString('da-DK')} kr.`,
+    }] : []),
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4" style={{ gridAutoRows: '1fr' }}>
       {cards.map(({ icon: Icon, label, value, sub }) => (
         <div
           key={label}

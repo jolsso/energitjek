@@ -3,6 +3,7 @@ import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
 import { ConsumptionForm } from '@/components/forms/ConsumptionForm'
 import { AddressForm } from '@/components/forms/AddressForm'
 import { PricingForm } from '@/components/forms/PricingForm'
+import { InvestmentForm } from '@/components/forms/InvestmentForm'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
 import { useSimulation } from '@/hooks/useSimulation'
@@ -37,6 +38,7 @@ export default function App() {
                 <AddressForm />
                 <ConsumptionForm />
                 <PricingForm />
+                <InvestmentForm />
               </div>
               <SolarConfigForm />
             </div>

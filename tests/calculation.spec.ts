@@ -166,7 +166,7 @@ test.describe('Full calculation flow', () => {
 test.describe('Solar config form', () => {
   test('displays default values', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText('6 kWp')).toBeVisible()
+    await expect(page.getByText('6 kWp').first()).toBeVisible()
     await expect(page.getByText('35 °')).toBeVisible()
     await expect(page.getByText('Syd (0°)')).toBeVisible()
   })

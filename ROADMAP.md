@@ -57,6 +57,13 @@
 - Sikkerhedsadvarsel vist ved aktivering
 - Nulstil rydder token fra localStorage
 
+### Energiflow-visualisering
+To metrics er allerede beregnet (`Dækningsgrad` og `Egenforbrugspct.`) men vises kun som tal. Feature: gør dem visuelle med to separate "donut" eller split-bar illustrationer:
+- **"Produktion dækker forbrug"** — hvor stor en andel af dit forbrug leveres af solcellerne (Dækningsgrad). Resten = netimport.
+- **"Forbrug dækker produktion"** — hvor stor en andel af produktionen bruger du selv (Egenforbrugspct.). Resten = neteksport/overskud.
+
+Formålet er at det bliver intuitivt tydeligt hvad de to procenter betyder — de er lette at forveksle.
+
 ---
 
 ## Kendte forbedringer

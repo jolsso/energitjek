@@ -9,7 +9,7 @@ async function mockExternalAPIs(page: import('@playwright/test').Page) {
       body: JSON.stringify(makeNominatimResponse()),
     }),
   )
-  await page.route('**/re.jrc.ec.europa.eu/**', route =>
+  await page.route('**/api/pvgis/**', route =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -90,7 +90,7 @@ test.describe('Full calculation flow', () => {
         body: JSON.stringify(makeNominatimResponse()),
       }),
     )
-    await page.route('**/re.jrc.ec.europa.eu/**', async route => {
+    await page.route('**/api/pvgis/**', async route => {
       await new Promise(r => setTimeout(r, 500))
       route.fulfill({
         status: 200,

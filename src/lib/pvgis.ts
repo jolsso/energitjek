@@ -1,6 +1,9 @@
 import type { Coordinates, PVGISData, SolarConfig } from '@/types'
 
-const PVGIS_BASE = 'https://re.jrc.ec.europa.eu/api/v5_3'
+// Requests go through /api/pvgis which is proxied to re.jrc.ec.europa.eu
+// in both dev (Vite proxy) and production (nginx proxy_pass).
+// PVGIS does not send CORS headers so direct browser requests are blocked.
+const PVGIS_BASE = '/api/pvgis'
 
 /**
  * Fetches hourly PV production data from PVGIS (EU Commission).

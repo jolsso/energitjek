@@ -109,7 +109,7 @@ function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number
 }
 
 /** Converts PVGIS time format "YYYYMMDD:HH:MM" to ISO 8601 */
-function pvgisTimeToISO(time: string): string {
+export function pvgisTimeToISO(time: string): string {
   // Format: "20XX:MMDD:HH:MM" or "YYYYMMDD:HH:MM"
   const [datePart, hh, mm] = time.split(':')
   if (datePart.length === 8) {

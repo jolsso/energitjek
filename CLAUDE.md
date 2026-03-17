@@ -4,6 +4,8 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Workflow
 
+Run `npm test` before committing. All tests must pass.
+
 After completing each feature or meaningful unit of work, create a git commit:
 - Stage relevant files (not `node_modules`, `dist`, `.env`)
 - Write a concise conventional commit message (`feat:`, `fix:`, `refactor:`, etc.)
@@ -20,6 +22,12 @@ npx tsc --noEmit
 
 # Lint
 npm run lint
+
+# Run unit tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
 
 # Production build
 npm run build

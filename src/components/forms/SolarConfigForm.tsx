@@ -40,7 +40,7 @@ function SliderField({ label, value, min, max, step, unit, description, onChange
 function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
   const rad = (tiltDeg * Math.PI) / 180
   // Panel: pivot at bottom-left corner, rotates upward to the right
-  const px = 36, py = 130  // pivot point (bottom-left of panel)
+  const px = 90, py = 130  // pivot point (bottom-left of panel)
   const panelW = 150, panelH = 10
 
   // Angle arc

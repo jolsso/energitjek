@@ -116,9 +116,9 @@ export function MonthlyChart({ hourly }: Props) {
               return labels[value] ?? value
             }}
           />
-          <Bar dataKey="egenforbrug" stackId="pos" fill={COLORS.egenforbrug} />
-          <Bar dataKey="overskud"    stackId="pos" fill={COLORS.overskud} radius={[3, 3, 0, 0]} />
-          <Bar dataKey="underskud"   stackId="neg" fill={COLORS.underskud} radius={[0, 0, 3, 3]} />
+          <Bar dataKey="egenforbrug" stackId="a" fill={COLORS.egenforbrug} />
+          <Bar dataKey="overskud"    stackId="a" fill={COLORS.overskud} radius={[3, 3, 0, 0]} />
+          <Bar dataKey="underskud"   stackId="a" fill={COLORS.underskud} radius={[0, 0, 3, 3]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

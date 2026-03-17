@@ -42,19 +42,18 @@ function aggregateByMonth(hourly: HourlySimulation[]) {
     name: m.name,
     egenforbrug: Math.round(m.egenforbrug),
     overskud:    Math.round(m.overskud),
-    underskud:   Math.round(m.underskud),
+    underskud:   -Math.round(m.underskud),  // negative → renders below x-axis
   }))
 }
 
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null
 
-  const eg  = payload.find(p => p.dataKey === 'egenforbrug')?.value ?? 0
-  const ov  = payload.find(p => p.dataKey === 'overskud')?.value ?? 0
-  const und = payload.find(p => p.dataKey === 'underskud')?.value ?? 0
-  const production  = (eg as number) + (ov as number)
-  const consumption = (eg as number) + (und as number)
-  const net = production - consumption
+  const eg  = payload.find(p => p.dataKey === 'egenforbrug')?.value as number ?? 0
+  const ov  = payload.find(p => p.dataKey === 'overskud')?.value as number ?? 0
+  const und = Math.abs(payload.find(p => p.dataKey === 'underskud')?.value as number ?? 0)
+  const production  = eg + ov
+  const net = production - und - eg  // net = overskud - underskud
 
   return (
     <div className="rounded-lg border border-border bg-card p-3 text-xs shadow-md space-y-1.5 min-w-[160px]">
@@ -62,14 +61,11 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
       <div className="space-y-1">
         <Row color={COLORS.egenforbrug} label="Egenforbrug" value={eg as number} />
         <Row color={COLORS.overskud}    label="Overskud (eksport)" value={ov as number} />
-        <Row color={COLORS.underskud}   label="Underskud (import)" value={und as number} />
+        <Row color={COLORS.underskud}   label="Underskud (import)" value={und} />
       </div>
       <div className="border-t border-border pt-1.5 space-y-0.5">
         <div className="flex justify-between text-muted-foreground">
           <span>Produktion</span><span>{production} kWh</span>
-        </div>
-        <div className="flex justify-between text-muted-foreground">
-          <span>Forbrug</span><span>{consumption} kWh</span>
         </div>
         <div className={`flex justify-between font-medium ${net >= 0 ? 'text-green-600' : 'text-red-500'}`}>
           <span>{net >= 0 ? 'Netto overskud' : 'Netto underskud'}</span>
@@ -120,9 +116,9 @@ export function MonthlyChart({ hourly }: Props) {
               return labels[value] ?? value
             }}
           />
-          <Bar dataKey="egenforbrug" stackId="a" fill={COLORS.egenforbrug} />
-          <Bar dataKey="overskud"    stackId="a" fill={COLORS.overskud} />
-          <Bar dataKey="underskud"   stackId="a" fill={COLORS.underskud} radius={[3, 3, 0, 0]} />
+          <Bar dataKey="egenforbrug" stackId="pos" fill={COLORS.egenforbrug} />
+          <Bar dataKey="overskud"    stackId="pos" fill={COLORS.overskud} radius={[3, 3, 0, 0]} />
+          <Bar dataKey="underskud"   stackId="neg" fill={COLORS.underskud} radius={[0, 0, 3, 3]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

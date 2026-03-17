@@ -1,6 +1,7 @@
 import { Zap } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import type { PriceArea } from '@/lib/energidataservice'
+import { CheckCircle2 } from 'lucide-react'
 
 const AREAS: { value: PriceArea; label: string }[] = [
   { value: 'DK1', label: 'DK1 — Vest (Jylland/Fyn)' },
@@ -8,14 +9,22 @@ const AREAS: { value: PriceArea; label: string }[] = [
 ]
 
 export function PricingForm() {
-  const { priceArea, setPriceArea } = useAppStore()
+  const { priceArea, setPriceArea, coordinates } = useAppStore()
 
   return (
     <div className="rounded-lg border border-border bg-card p-5 space-y-4">
-      <h2 className="font-semibold flex items-center gap-2">
-        <Zap className="h-4 w-4 text-primary" />
-        Priszone
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold flex items-center gap-2">
+          <Zap className="h-4 w-4 text-primary" />
+          Priszone
+        </h2>
+        {coordinates && (
+          <span className="inline-flex items-center gap-1 text-xs text-green-700">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Auto-registreret
+          </span>
+        )}
+      </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
         {AREAS.map((area) => {
@@ -38,7 +47,7 @@ export function PricingForm() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Bruges til at hente reelle spotpriser fra Energidataservice
+        Bestemmes automatisk fra postnummer. Du kan overskrive manuelt.
       </p>
     </div>
   )

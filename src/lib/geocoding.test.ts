@@ -1,12 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { geocodeAddress } from './geocoding'
+import { geocodeAddress, priceAreaFromPostcode } from './geocoding'
+
+describe('priceAreaFromPostcode', () => {
+  it('returns DK1 for Jylland/Fyn (5000–9999)', () => {
+    expect(priceAreaFromPostcode('5000')).toBe('DK1')  // Odense
+    expect(priceAreaFromPostcode('8000')).toBe('DK1')  // Aarhus
+    expect(priceAreaFromPostcode('9000')).toBe('DK1')  // Aalborg
+    expect(priceAreaFromPostcode('9999')).toBe('DK1')
+  })
+
+  it('returns DK2 for Sjælland/øer (1000–4999)', () => {
+    expect(priceAreaFromPostcode('1000')).toBe('DK2')  // København
+    expect(priceAreaFromPostcode('2100')).toBe('DK2')  // København Ø
+    expect(priceAreaFromPostcode('3700')).toBe('DK2')  // Bornholm
+    expect(priceAreaFromPostcode('4000')).toBe('DK2')  // Roskilde
+  })
+})
 
 describe('geocodeAddress', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('returns coordinates and display name on success', async () => {
+  it('returns coordinates, display name, and price area on success', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ([
@@ -14,6 +30,7 @@ describe('geocodeAddress', () => {
           lat: '56.1629',
           lon: '10.2039',
           display_name: 'Rådhuspladsen, Aarhus, Danmark',
+          address: { postcode: '8000' },
         },
       ]),
     }))
@@ -23,6 +40,7 @@ describe('geocodeAddress', () => {
     expect(result.coordinates.lat).toBeCloseTo(56.1629)
     expect(result.coordinates.lon).toBeCloseTo(10.2039)
     expect(result.displayName).toBe('Rådhuspladsen, Aarhus, Danmark')
+    expect(result.priceArea).toBe('DK1')  // Aarhus = 8000 = DK1
   })
 
   it('throws a Danish error message when no results found', async () => {
@@ -44,7 +62,7 @@ describe('geocodeAddress', () => {
   it('appends Danmark and countrycodes=dk to the request', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ([{ lat: '55', lon: '12', display_name: 'Test' }]),
+      json: async () => ([{ lat: '55', lon: '12', display_name: 'Test', address: {} }]),
     })
     vi.stubGlobal('fetch', mockFetch)
 

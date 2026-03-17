@@ -5,7 +5,7 @@ import { geocodeAddress } from '@/lib/geocoding'
 import { AddressMap } from '@/components/map/AddressMap'
 
 export function AddressForm() {
-  const { address, coordinates, setAddress, setCoordinates } = useAppStore()
+  const { address, coordinates, setAddress, setCoordinates, setPriceArea } = useAppStore()
   const [localAddress, setLocalAddress] = useState(address)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,6 +22,7 @@ export function AddressForm() {
       setMatchedName(result.displayName)
       setAddress(localAddress)
       setCoordinates(result.coordinates)
+      setPriceArea(result.priceArea)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ukendt fejl')
     } finally {

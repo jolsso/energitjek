@@ -38,6 +38,7 @@ export function makeNominatimResponse(
   lat = '56.1572',
   lon = '10.2107',
   displayName = 'Rådhuspladsen 2, Aarhus C, Aarhus Kommune, 8000, Danmark',
+  postcode = '8000',
 ) {
-  return [{ lat, lon, display_name: displayName }]
+  return [{ lat, lon, display_name: displayName, address: { postcode } }]
 }

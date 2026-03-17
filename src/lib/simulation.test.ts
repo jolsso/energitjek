@@ -146,6 +146,22 @@ describe('runSimulation — savings', () => {
     // 1 kWh self-consumed → savedDkk = 2.3325
     expect(result.hourly[0].savedDkk).toBeCloseTo(2.3325)
   })
+
+  it('applies different tariffDkk per hour (hourly nettarif)', () => {
+    // Two hours: off-peak (low tariff) and peak (high tariff)
+    const pvgis = makePVGIS([1000, 1000])  // 1 kWh production each hour
+    const prices: HourlyPrice[] = [
+      { hourStart: '2024-01-01T00:00:00', spotEur: 0, tariffDkk: 1.00 },  // off-peak
+      { hourStart: '2024-01-01T01:00:00', spotEur: 0, tariffDkk: 2.50 },  // peak
+    ]
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 2, hourlyKwh: [1, 1] }, prices)
+
+    // spotEur=0 → spotDkk=0 → retail = 0 * 1.25 + tariffDkk
+    expect(result.hourly[0].savedDkk).toBeCloseTo(1.00)  // off-peak hour
+    expect(result.hourly[1].savedDkk).toBeCloseTo(2.50)  // peak hour
+    // Annual savings = sum of both
+    expect(result.summary.annualSavedDkk).toBeCloseTo(3.50)
+  })
 })
 
 // --- runSimulation: summary ---

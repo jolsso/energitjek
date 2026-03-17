@@ -7,10 +7,12 @@ import { InvestmentForm } from '@/components/forms/InvestmentForm'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
 import { useSimulation } from '@/hooks/useSimulation'
+import { useAppStore } from '@/store/appStore'
 
 export default function App() {
   const [step, setStep] = useState<'input' | 'results'>('input')
   const { runSimulation, isLoading, error } = useSimulation()
+  const reset = useAppStore((s) => s.reset)
 
   const handleCalculate = async () => {
     const ok = await runSimulation()
@@ -54,13 +56,20 @@ export default function App() {
               </div>
             )}
 
-            <div className="flex justify-center pt-2 pb-6">
+            <div className="flex items-center justify-center gap-3 pt-2 pb-6">
               <button
                 onClick={handleCalculate}
                 disabled={isLoading}
                 className="group relative px-10 py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold text-base hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
               >
                 {isLoading ? 'Beregner…' : 'Beregn besparelse'}
+              </button>
+              <button
+                onClick={reset}
+                disabled={isLoading}
+                className="px-5 py-3.5 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Nulstil
               </button>
             </div>
           </div>

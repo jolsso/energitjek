@@ -53,14 +53,6 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
   const labelX = px + labelR * Math.cos(rad / 2)
   const labelY = py - labelR * Math.sin(rad / 2)
 
-  // Sun position: follows the panel face normal (-sin, -cos in SVG coords)
-  // so it always sits above the side of the panel that catches sunlight
-  const cx_panel = px + (panelW / 2) * Math.cos(rad) - (panelH / 2) * Math.sin(rad)
-  const cy_panel = py - (panelW / 2) * Math.sin(rad) - (panelH / 2) * Math.cos(rad)
-  const sunDist = 80
-  const sunX = Math.max(18, Math.min(300, cx_panel - Math.sin(rad) * sunDist))
-  const sunY = Math.max(15, cy_panel - Math.cos(rad) * sunDist)
-
   // Cell divider positions (5 dividers = 6 cells)
   const cellDividers = [1, 2, 3, 4, 5]
 
@@ -72,10 +64,10 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
         style={{ stroke: 'hsl(var(--border))' }} strokeWidth="1.5"
       />
 
-      {/* Sun — tracks panel face direction */}
-      <circle cx={sunX} cy={sunY} r="18"
+      {/* Sun — fixed upper-left */}
+      <circle cx="38" cy="22" r="18"
         style={{ fill: 'hsl(var(--primary))' }} opacity="0.12" />
-      <circle cx={sunX} cy={sunY} r="10"
+      <circle cx="38" cy="22" r="10"
         style={{ fill: 'hsl(var(--primary))' }} opacity="0.9" />
 
       {/* Angle arc */}

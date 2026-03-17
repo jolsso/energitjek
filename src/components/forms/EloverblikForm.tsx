@@ -76,10 +76,12 @@ export function EloverblikForm() {
 
       {status !== 'success' && (
         <>
-          <ol className="text-xs text-muted-foreground space-y-0.5 list-decimal list-inside">
+          <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
             <li>Log ind på eloverblik.dk med MitID</li>
-            <li>Gå til <span className="font-medium text-foreground">Profil → Datadeling</span></li>
-            <li>Klik <span className="font-medium text-foreground">Opret token</span> og kopiér det</li>
+            <li>Klik <span className="font-medium text-foreground">☰ hamburgermenu</span> øverst</li>
+            <li>Vælg <span className="font-medium text-foreground">API access</span></li>
+            <li>Klik <span className="font-medium text-foreground">Opret token</span>, giv det et navn og acceptér vilkårene</li>
+            <li>Kopiér tokenet — <span className="font-medium text-foreground">det vises kun én gang</span></li>
           </ol>
 
           <div className="flex gap-2">

@@ -6,6 +6,7 @@ const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search'
 export interface GeocodeResult {
   coordinates: Coordinates
   displayName: string  // Human-readable match for user verification
+  postcode: string
   priceArea: PriceArea  // DK1 (Jylland/Fyn) or DK2 (Sjælland/øer)
 }
 
@@ -47,6 +48,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
       lon: parseFloat(data[0].lon),
     },
     displayName: data[0].display_name as string,
+    postcode,
     priceArea: postcode ? priceAreaFromPostcode(postcode) : 'DK2',
   }
 }

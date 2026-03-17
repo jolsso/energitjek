@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { fetchPVGISData, DATA_YEAR } from '@/lib/pvgis'
-import { fetchSpotPrices } from '@/lib/energidataservice'
+import { fetchSpotPrices, VAT_MULTIPLIER } from '@/lib/energidataservice'
+import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK } from '@/lib/gridtariff'
 import { runSimulation } from '@/lib/simulation'
 import type { HourlyPrice } from '@/types'
 
@@ -11,6 +12,7 @@ export function useSimulation() {
 
   const {
     coordinates,
+    postcode,
     solarConfig,
     consumption,
     priceArea,
@@ -28,29 +30,41 @@ export function useSimulation() {
     setError(null)
 
     try {
-      const pvgis = await fetchPVGISData(coordinates, solarConfig)
+      // Fetch PVGIS, spot prices, and grid tariff in parallel
+      const dso = dsoFromPostcode(postcode)
+
+      const [pvgis, rawPrices, tariff24] = await Promise.all([
+        fetchPVGISData(coordinates, solarConfig),
+        fetchSpotPrices(DATA_YEAR, priceArea).catch((err) => {
+          console.warn('Spotpriser ikke tilgængelige — bruger faste priser.', err)
+          return null
+        }),
+        dso
+          ? fetchGridTariff(dso.glnNumber).catch((err) => {
+              console.warn(`Nettarif ikke tilgængelig for ${dso.name} — bruger fast tarif.`, err)
+              return null
+            })
+          : Promise.resolve(null),
+      ])
+
       setPVGISData(pvgis)
 
       let prices: HourlyPrice[] | undefined
-      try {
-        prices = await fetchSpotPrices(DATA_YEAR, priceArea)
-      } catch (priceErr) {
-        console.warn(
-          'Kunne ikke hente spotpriser fra Energidataservice — bruger faste priser som fallback.',
-          priceErr,
-        )
-        prices = undefined
+      if (rawPrices) {
+        prices = rawPrices.map((p, i) => ({
+          ...p,
+          tariffDkk: tariff24
+            ? // Hourly nettarif + elafgift + system tariff, all incl. VAT
+              (tariff24[i % 24] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
+            : p.tariffDkk, // fallback: flat 1.40 from energidataservice.ts
+        }))
       }
 
       const result = runSimulation(pvgis, consumption, prices)
       setSimulationResult(result)
       return true
     } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : 'Noget gik galt. Prøv igen.',
-      )
+      setError(e instanceof Error ? e.message : 'Noget gik galt. Prøv igen.')
       return false
     } finally {
       setIsLoading(false)

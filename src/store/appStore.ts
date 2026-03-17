@@ -12,6 +12,7 @@ import type { PriceArea } from '@/lib/energidataservice'
 interface AppState {
   // User inputs (persisted in localStorage)
   address: string
+  postcode: string
   coordinates: Coordinates | null
   solarConfig: SolarConfig
   consumption: ConsumptionData
@@ -23,6 +24,7 @@ interface AppState {
 
   // Actions
   setAddress: (address: string) => void
+  setPostcode: (postcode: string) => void
   setCoordinates: (coords: Coordinates | null) => void
   setSolarConfig: (config: Partial<SolarConfig>) => void
   setConsumption: (consumption: Partial<ConsumptionData>) => void
@@ -48,6 +50,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       address: '',
+      postcode: '',
       coordinates: null,
       solarConfig: DEFAULT_SOLAR_CONFIG,
       consumption: DEFAULT_CONSUMPTION,
@@ -56,6 +59,7 @@ export const useAppStore = create<AppState>()(
       simulationResult: null,
 
       setAddress: (address) => set({ address }),
+      setPostcode: (postcode) => set({ postcode }),
       setCoordinates: (coordinates) => set({ coordinates }),
       setSolarConfig: (config) =>
         set((s) => ({ solarConfig: { ...s.solarConfig, ...config } })),
@@ -67,6 +71,7 @@ export const useAppStore = create<AppState>()(
       reset: () =>
         set({
           address: '',
+          postcode: '',
           coordinates: null,
           solarConfig: DEFAULT_SOLAR_CONFIG,
           consumption: DEFAULT_CONSUMPTION,
@@ -80,6 +85,7 @@ export const useAppStore = create<AppState>()(
       // Only persist user inputs, not computed results
       partialize: (s) => ({
         address: s.address,
+        postcode: s.postcode,
         solarConfig: s.solarConfig,
         priceArea: s.priceArea,
         consumption: {

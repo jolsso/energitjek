@@ -4,9 +4,11 @@ import { AddressForm } from '@/components/forms/AddressForm'
 import { PricingForm } from '@/components/forms/PricingForm'
 import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
 import { InvestmentForm } from '@/components/forms/InvestmentForm'
+import { BatteryConfigForm } from '@/components/forms/BatteryConfigForm'
 import { AddressMap } from '@/components/map/AddressMap'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
+import { ComingSoon } from '@/components/ComingSoon'
 import { useSimulation } from '@/hooks/useSimulation'
 import { useAppStore } from '@/store/appStore'
 
@@ -113,6 +115,9 @@ export default function App() {
               <div className="space-y-4 lg:sticky lg:top-20">
                 <SolarConfigForm />
                 <InvestmentForm />
+                <ComingSoon phase="Phase 4" title="Batterisimulering">
+                  <BatteryConfigForm />
+                </ComingSoon>
                 {coordinates && (
                   <AddressMap
                     coordinates={coordinates}

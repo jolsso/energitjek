@@ -1,11 +1,6 @@
-version: '3.8'
 services:
   app:
     build: .
     ports:
-      - "8050:8050"
-    command: python app.py
-    volumes:
-      - ./cache:/app/cache
-    environment:
-      - CACHE_DIR=/app/cache
+      - "80:80"
+    restart: unless-stopped

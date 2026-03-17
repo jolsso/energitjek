@@ -1,6 +1,0 @@
-dash
-pandas
-pvlib
-requests
-dash-bootstrap-components
-python-dotenv

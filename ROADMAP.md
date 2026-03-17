@@ -46,15 +46,16 @@
 - Strategier: egenforbrug (gem overskud til aften), peak-shaving, time-of-use
 - `BatteryConfig`-typen er allerede defineret i `types/index.ts`
 
-### Solcelleanlæg — UI-forbedringer
+### Solcelleanlæg — UI-forbedringer ✅
 - **Retningspil på kort** — azimut-slideren drejer en pil oven på adressekortet, så man visuelt kan se, hvilken retning panelerne vender
-- **Hældningsillustration** — lille SVG-illustration af et tag, der opdateres live mens man trækker i hældnings-slideren
-- **Effekt op til 50 kWp** — max effekt hæves fra 20 til 50 kWp (relevant for erhverv og større villaer)
-- **Systemtab 0–30 %, standard 5 %** — minimum sænkes fra 5 % til 0 %, og standardværdien ændres til 5 % (mere realistisk for nye anlæg med microinvertere)
+- **Hældningsillustration** — SVG-illustration med panel, sol og vinkelindikator, opdateres live
+- **Effekt op til 50 kWp** — max effekt hævet fra 20 til 50 kWp
+- **Systemtab 0–30 %, standard 5 %** — minimum sænket til 0 %, standard ændret til 5 %
 
-### Eloverblik — token-persistering
-- Refresh token gemmes krypteret i localStorage (eller sessionStorage som opt-in) så brugeren ikke skal genstarte flowet ved hvert besøg
-- Klar advarsel om sikkerhedsimplikationer ved lokal opbevaring af token
+### Eloverblik — token-persistering ✅
+- Opt-in checkbox "Husk token på denne enhed" gemmer token i localStorage
+- Sikkerhedsadvarsel vist ved aktivering
+- Nulstil rydder token fra localStorage
 
 ---
 

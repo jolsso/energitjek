@@ -1,17 +1,29 @@
-import { useState } from 'react'
-import { Loader2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Loader2, CheckCircle2, XCircle, ExternalLink, ShieldAlert } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { fetchDataAccessToken, fetchMeteringPointId, fetchHourlyConsumption, clearTokenCache } from '@/lib/eloverblik'
 import { DATA_YEAR } from '@/lib/pvgis'
+
+const STORAGE_KEY = 'energitjek-eloverblik-token'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export function EloverblikForm() {
   const { setConsumption } = useAppStore()
   const [token, setToken] = useState('')
+  const [rememberToken, setRememberToken] = useState(false)
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [fetchedKwh, setFetchedKwh] = useState<number | null>(null)
+
+  // Pre-fill token from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      setToken(saved)
+      setRememberToken(true)
+    }
+  }, [])
 
   const handleFetch = async () => {
     if (!token.trim()) return
@@ -24,6 +36,10 @@ export function EloverblikForm() {
       const meteringPointId = await fetchMeteringPointId(dataToken)
       const { hourlyKwh, annualKwh } = await fetchHourlyConsumption(dataToken, meteringPointId, DATA_YEAR)
 
+      if (rememberToken) {
+        localStorage.setItem(STORAGE_KEY, token.trim())
+      }
+
       setConsumption({ source: 'eloverblik', annualKwh, hourlyKwh })
       setFetchedKwh(Math.round(annualKwh))
       setStatus('success')
@@ -35,10 +51,12 @@ export function EloverblikForm() {
 
   const handleReset = () => {
     setToken('')
+    setRememberToken(false)
     setStatus('idle')
     setErrorMsg(null)
     setFetchedKwh(null)
     clearTokenCache()
+    localStorage.removeItem(STORAGE_KEY)
     setConsumption({ source: 'manual', hourlyKwh: undefined })
   }
 
@@ -84,6 +102,27 @@ export function EloverblikForm() {
                 : 'Hent data'}
             </button>
           </div>
+
+          <label className="flex items-start gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberToken}
+              onChange={(e) => setRememberToken(e.target.checked)}
+              className="mt-0.5 accent-primary shrink-0"
+            />
+            <span className="text-xs text-muted-foreground">
+              Husk token på denne enhed
+            </span>
+          </label>
+
+          {rememberToken && (
+            <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 p-2.5">
+              <ShieldAlert className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700">
+                Tokenet gemmes ukrypteret i browserens localStorage. Undgå dette på delte computere. Tokenet giver adgang til dine forbrugsdata på eloverblik.dk.
+              </p>
+            </div>
+          )}
 
           {status === 'error' && errorMsg && (
             <div className="flex items-start gap-2 text-xs text-red-600">

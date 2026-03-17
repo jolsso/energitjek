@@ -14,6 +14,33 @@ const markerIcon = L.icon({
   shadowSize: [41, 41],
 })
 
+// Directional arrow icon showing which way the solar panels face.
+// azimuthDeg: 0=south, -90=east, 90=west → compass bearing = 180 + azimuthDeg
+function makeArrowIcon(azimuthDeg: number) {
+  const bearing = 180 + azimuthDeg
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="28"
+        fill="rgba(251,191,36,0.18)"
+        stroke="rgba(217,119,6,0.55)"
+        stroke-width="1.5"
+        stroke-dasharray="4 3"/>
+      <g transform="rotate(${bearing} 32 32)">
+        <line x1="32" y1="30" x2="32" y2="10"
+          stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+        <polygon points="32,3 26,13 38,13" fill="#d97706"/>
+      </g>
+      <circle cx="32" cy="32" r="3.5" fill="#d97706"/>
+    </svg>
+  `.trim()
+  return L.divIcon({
+    html: svg,
+    className: '',
+    iconSize: [64, 64],
+    iconAnchor: [32, 32],
+  })
+}
+
 function FlyTo({ coords }: { coords: Coordinates }) {
   const map = useMap()
   useEffect(() => {
@@ -25,9 +52,10 @@ function FlyTo({ coords }: { coords: Coordinates }) {
 interface Props {
   coordinates: Coordinates
   displayName: string
+  azimuthDeg?: number
 }
 
-export function AddressMap({ coordinates, displayName }: Props) {
+export function AddressMap({ coordinates, displayName, azimuthDeg }: Props) {
   return (
     <div className="rounded-md overflow-hidden border border-border h-48">
       <MapContainer
@@ -42,6 +70,15 @@ export function AddressMap({ coordinates, displayName }: Props) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <FlyTo coords={coordinates} />
+        {/* Direction arrow behind the pin */}
+        {azimuthDeg !== undefined && (
+          <Marker
+            position={[coordinates.lat, coordinates.lon]}
+            icon={makeArrowIcon(azimuthDeg)}
+            zIndexOffset={-100}
+          />
+        )}
+        {/* Address pin */}
         <Marker position={[coordinates.lat, coordinates.lon]} icon={markerIcon}>
           <Popup maxWidth={240}>
             <span className="text-xs">{displayName}</span>

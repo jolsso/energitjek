@@ -5,7 +5,7 @@ import { geocodeAddress } from '@/lib/geocoding'
 import { AddressMap } from '@/components/map/AddressMap'
 
 export function AddressForm() {
-  const { address, coordinates, setAddress, setPostcode, setCoordinates, setPriceArea } = useAppStore()
+  const { address, coordinates, solarConfig, setAddress, setPostcode, setCoordinates, setPriceArea } = useAppStore()
   const [localAddress, setLocalAddress] = useState(address)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -82,7 +82,11 @@ export function AddressForm() {
               </p>
             </div>
           </div>
-          <AddressMap coordinates={coordinates} displayName={matchedName} />
+          <AddressMap
+            coordinates={coordinates}
+            displayName={matchedName}
+            azimuthDeg={solarConfig.azimuthDeg}
+          />
         </>
       )}
 

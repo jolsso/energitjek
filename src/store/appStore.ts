@@ -40,7 +40,7 @@ const DEFAULT_SOLAR_CONFIG: SolarConfig = {
   peakKw: 6,
   tiltDeg: 35,
   azimuthDeg: 0,   // south-facing
-  systemLossPct: 14,
+  systemLossPct: 5,
 }
 
 const DEFAULT_CONSUMPTION: ConsumptionData = {

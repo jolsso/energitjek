@@ -38,12 +38,20 @@ function aggregateByMonth(hourly: HourlySimulation[]) {
     months[month].underskud   += h.gridImportKwh
   }
 
-  return months.map(m => ({
-    name: m.name,
-    egenforbrug: Math.round(m.egenforbrug),
-    overskud:    Math.round(m.overskud),
-    underskud:   -Math.round(m.underskud),  // negative → renders below x-axis
-  }))
+  return months.map(m => {
+    const eg  = Math.round(m.egenforbrug)
+    const ov  = Math.round(m.overskud)
+    const und = Math.round(m.underskud)
+    return {
+      name: m.name,
+      egenforbrug: eg,
+      overskud:    ov,
+      // Invisible bar that resets the cumulative stack back to 0 before
+      // drawing underskud, so the red bar always starts exactly at zero.
+      underskudOffset: -(eg + ov),
+      underskud: -und,
+    }
+  })
 }
 
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
@@ -52,8 +60,8 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   const eg  = payload.find(p => p.dataKey === 'egenforbrug')?.value as number ?? 0
   const ov  = payload.find(p => p.dataKey === 'overskud')?.value as number ?? 0
   const und = Math.abs(payload.find(p => p.dataKey === 'underskud')?.value as number ?? 0)
-  const production  = eg + ov
-  const net = production - und - eg  // net = overskud - underskud
+  const production = eg + ov
+  const net = ov - und  // net = eksport - import
 
   return (
     <div className="rounded-lg border border-border bg-card p-3 text-xs shadow-md space-y-1.5 min-w-[160px]">
@@ -116,9 +124,10 @@ export function MonthlyChart({ hourly }: Props) {
               return labels[value] ?? value
             }}
           />
-          <Bar dataKey="egenforbrug" stackId="a" fill={COLORS.egenforbrug} />
-          <Bar dataKey="overskud"    stackId="a" fill={COLORS.overskud} radius={[3, 3, 0, 0]} />
-          <Bar dataKey="underskud"   stackId="a" fill={COLORS.underskud} radius={[0, 0, 3, 3]} />
+          <Bar dataKey="egenforbrug"     stackId="a" fill={COLORS.egenforbrug} />
+          <Bar dataKey="overskud"        stackId="a" fill={COLORS.overskud} radius={[3, 3, 0, 0]} />
+          <Bar dataKey="underskudOffset" stackId="a" fill="transparent" legendType="none" tooltipType="none" />
+          <Bar dataKey="underskud"       stackId="a" fill={COLORS.underskud} radius={[0, 0, 3, 3]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -38,7 +38,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   if (!active || !payload?.length) return null
   const netto = payload[0]?.value as number
   return (
-    <div className="rounded-lg border border-border bg-card p-3 text-xs shadow-md min-w-[150px] space-y-1">
+    <div className="rounded-xl border border-border bg-card card-shadow p-3 text-xs shadow-md min-w-[150px] space-y-1">
       <p className="font-semibold text-sm">År {label}</p>
       <div className={`flex justify-between gap-4 font-medium ${netto >= 0 ? 'text-green-600' : 'text-red-500'}`}>
         <span>Kumulativ netto</span>
@@ -57,7 +57,7 @@ export function PaybackChart({ investmentDkk, annualSavedDkk }: Props) {
   const yDomain: [number, number] = [Math.min(minVal, 0), Math.max(maxVal, 0)]
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
       <div>
         <h3 className="font-semibold">Tilbagebetalingsperiode</h3>
         <p className="text-xs text-muted-foreground mt-0.5">

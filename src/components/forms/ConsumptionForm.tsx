@@ -7,7 +7,7 @@ export function ConsumptionForm() {
   const isEloverblik = consumption.source === 'eloverblik'
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
       <h2 className="font-semibold flex items-center gap-2">
         <Zap className="h-4 w-4 text-primary" />
         Forbrug

@@ -41,7 +41,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   const savings = payload[0]?.value ?? 0
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3 text-xs shadow-md min-w-[120px]">
+    <div className="rounded-xl border border-border bg-card card-shadow p-3 text-xs shadow-md min-w-[120px]">
       <p className="font-semibold text-sm mb-1">{label}</p>
       <div className="flex justify-between gap-4">
         <span className="text-muted-foreground">Besparelse</span>
@@ -55,7 +55,7 @@ export function MonthlySavingsChart({ hourly }: Props) {
   const data = aggregateSavingsByMonth(hourly)
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
       <div>
         <h3 className="font-semibold">Månedlig besparelse (DKK)</h3>
         <p className="text-xs text-muted-foreground mt-0.5">

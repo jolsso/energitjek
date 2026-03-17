@@ -65,6 +65,7 @@ export interface SimulationSummary {
   selfConsumptionPct: number   // % of production self-consumed
   coveragePct: number          // % of consumption covered by solar
   annualSavedDkk: number
+  co2SavedKg: number           // kg CO2 avoided annually (self-consumed kWh × grid factor)
   paybackYears: number | null  // null if investment cost not provided
 }
 

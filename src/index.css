@@ -4,39 +4,49 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Warm off-white canvas */
+    --background: 40 20% 97%;
+    --foreground: 224 32% 12%;
+
+    /* Cards: pure white for contrast against warm background */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --card-foreground: 224 32% 12%;
+
+    /* Borders: subtle warm-grey */
+    --border: 220 18% 90%;
+    --input: 220 18% 90%;
+
+    /* Primary: amber-gold */
     --primary: 38 92% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+
+    /* Muted surfaces */
+    --secondary: 220 18% 95%;
+    --secondary-foreground: 224 32% 30%;
+    --muted: 220 18% 95%;
+    --muted-foreground: 220 12% 52%;
+    --accent: 220 18% 93%;
+    --accent-foreground: 224 32% 20%;
+
     --ring: 38 92% 50%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --background: 224 32% 8%;
+    --foreground: 210 20% 94%;
+    --card: 224 28% 11%;
+    --card-foreground: 210 20% 94%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
     --primary: 38 92% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --secondary: 220 20% 16%;
+    --secondary-foreground: 210 20% 80%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 215 16% 58%;
+    --accent: 220 20% 16%;
+    --accent-foreground: 210 20% 94%;
     --ring: 38 92% 50%;
   }
 }
@@ -45,7 +55,22 @@
   * {
     @apply border-border;
   }
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  }
+  .card-shadow-md {
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.07), 0 2px 4px -1px rgb(0 0 0 / 0.04);
   }
 }

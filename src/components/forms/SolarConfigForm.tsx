@@ -39,7 +39,7 @@ export function SolarConfigForm() {
   const { solarConfig, setSolarConfig } = useAppStore()
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 space-y-5">
+    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-5">
       <h2 className="font-semibold flex items-center gap-2">
         <Sun className="h-4 w-4 text-primary" />
         Solcelleanlæg

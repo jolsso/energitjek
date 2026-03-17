@@ -16,6 +16,13 @@ import { pvgisTimeToISO } from './pvgis'
 const FLAT_RETAIL_PRICE_DKK = 3.0
 
 /**
+ * Danish grid average CO2 emission factor (kg CO2 per kWh consumed from grid).
+ * Source: Energinet annual average for 2023 (~130 g/kWh).
+ * Applied only to self-consumed solar production (avoided grid draw).
+ */
+const CO2_GRID_FACTOR_KG_PER_KWH = 0.130
+
+/**
  * Flat feed-in price used as fallback when no spot prices are provided.
  * Denmark does not offer a full net-metering scheme — surplus production is
  * sold at spot price minus grid fees, typically much lower than retail.
@@ -108,12 +115,15 @@ function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number
     ? (totalSelfConsumed / annualConsumptionKwh) * 100
     : 0
 
+  const co2SavedKg = totalSelfConsumed * CO2_GRID_FACTOR_KG_PER_KWH
+
   return {
     annualProductionKwh,
     annualConsumptionKwh,
     selfConsumptionPct,
     coveragePct,
     annualSavedDkk,
+    co2SavedKg,
     paybackYears: null,  // set externally when investment cost is provided
   }
 }

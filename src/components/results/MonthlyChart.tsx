@@ -64,7 +64,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   const net = ov - und  // net = eksport - import
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3 text-xs shadow-md space-y-1.5 min-w-[160px]">
+    <div className="rounded-xl border border-border bg-card card-shadow p-3 text-xs shadow-md space-y-1.5 min-w-[160px]">
       <p className="font-semibold text-sm">{label}</p>
       <div className="space-y-1">
         <Row color={COLORS.egenforbrug} label="Egenforbrug" value={eg as number} />
@@ -100,7 +100,7 @@ export function MonthlyChart({ hourly }: Props) {
   const data = aggregateByMonth(hourly)
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
       <div>
         <h3 className="font-semibold">Månedlig oversigt</h3>
         <p className="text-xs text-muted-foreground mt-0.5">

@@ -138,12 +138,13 @@ describe('runSimulation — savings', () => {
     const prices: HourlyPrice[] = [{
       hourStart: '2024-01-01T00:00:00',
       spotEur: 100,     // 100 EUR/MWh = 0.1 EUR/kWh = 0.746 DKK/kWh
-      tariffDkk: 0.20,  // total retail = 0.946 DKK/kWh
+      tariffDkk: 1.40,  // realistic Danish fixed costs incl. elafgift, nettarif, etc.
     }]
     const result = runSimulation(pvgis, { source: 'manual', annualKwh: 1, hourlyKwh: [1] }, prices)
 
-    // 1 kWh self-consumed at (100/1000 * 7.46 + 0.20) = 0.946 DKK/kWh
-    expect(result.hourly[0].savedDkk).toBeCloseTo(0.946)
+    // retail = (100/1000 * 7.46) * 1.25 + 1.40 = 0.746 * 1.25 + 1.40 = 0.9325 + 1.40 = 2.3325 DKK/kWh
+    // 1 kWh self-consumed → savedDkk = 2.3325
+    expect(result.hourly[0].savedDkk).toBeCloseTo(2.3325)
   })
 })
 

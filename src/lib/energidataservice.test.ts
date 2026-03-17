@@ -1,10 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { EUR_TO_DKK, fetchSpotPrices } from './energidataservice'
+import { EUR_TO_DKK, VAT_MULTIPLIER, FEED_IN_MULTIPLIER, fetchSpotPrices } from './energidataservice'
 
 describe('EUR_TO_DKK', () => {
   it('is a positive number close to the DKK/EUR peg', () => {
     expect(EUR_TO_DKK).toBeGreaterThan(7)
     expect(EUR_TO_DKK).toBeLessThan(8)
+  })
+})
+
+describe('VAT_MULTIPLIER', () => {
+  it('is exported and equals 1.25 (25% Danish VAT)', () => {
+    expect(VAT_MULTIPLIER).toBe(1.25)
+  })
+})
+
+describe('FEED_IN_MULTIPLIER', () => {
+  it('is exported and is between 0 and 1 (fraction of spot price for exports)', () => {
+    expect(FEED_IN_MULTIPLIER).toBeGreaterThan(0)
+    expect(FEED_IN_MULTIPLIER).toBeLessThanOrEqual(1)
+    expect(FEED_IN_MULTIPLIER).toBe(0.90)
   })
 })
 
@@ -28,7 +42,7 @@ describe('fetchSpotPrices', () => {
     expect(prices).toHaveLength(2)
     expect(prices[0].hourStart).toBe('2024-01-01T00:00:00')
     expect(prices[0].spotEur).toBe(80)
-    expect(prices[0].tariffDkk).toBe(0.20)
+    expect(prices[0].tariffDkk).toBe(1.40)
     expect(prices[1].spotEur).toBe(0)  // null coerced to 0
   })
 

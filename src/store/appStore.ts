@@ -7,6 +7,7 @@ import type {
   PVGISData,
   SimulationResult,
 } from '@/types'
+import type { PriceArea } from '@/lib/energidataservice'
 
 interface AppState {
   // User inputs (persisted in localStorage)
@@ -14,6 +15,7 @@ interface AppState {
   coordinates: Coordinates | null
   solarConfig: SolarConfig
   consumption: ConsumptionData
+  priceArea: PriceArea
 
   // Fetched data (not persisted — refetched as needed)
   pvgisData: PVGISData | null
@@ -24,6 +26,7 @@ interface AppState {
   setCoordinates: (coords: Coordinates | null) => void
   setSolarConfig: (config: Partial<SolarConfig>) => void
   setConsumption: (consumption: Partial<ConsumptionData>) => void
+  setPriceArea: (area: PriceArea) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
   reset: () => void
@@ -48,6 +51,7 @@ export const useAppStore = create<AppState>()(
       coordinates: null,
       solarConfig: DEFAULT_SOLAR_CONFIG,
       consumption: DEFAULT_CONSUMPTION,
+      priceArea: 'DK2',
       pvgisData: null,
       simulationResult: null,
 
@@ -57,6 +61,7 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ solarConfig: { ...s.solarConfig, ...config } })),
       setConsumption: (consumption) =>
         set((s) => ({ consumption: { ...s.consumption, ...consumption } })),
+      setPriceArea: (priceArea) => set({ priceArea }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
       reset: () =>
@@ -65,6 +70,7 @@ export const useAppStore = create<AppState>()(
           coordinates: null,
           solarConfig: DEFAULT_SOLAR_CONFIG,
           consumption: DEFAULT_CONSUMPTION,
+          priceArea: 'DK2',
           pvgisData: null,
           simulationResult: null,
         }),
@@ -75,6 +81,7 @@ export const useAppStore = create<AppState>()(
       partialize: (s) => ({
         address: s.address,
         solarConfig: s.solarConfig,
+        priceArea: s.priceArea,
         consumption: {
           source: s.consumption.source,
           annualKwh: s.consumption.annualKwh,

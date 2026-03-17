@@ -32,9 +32,13 @@ export async function fetchSpotPrices(
   return json.records.map((r: any): HourlyPrice => ({
     hourStart: r.HourDK,
     spotEur: r.SpotPriceEUR ?? 0,
-    // Tariffs are hardcoded for now — a real integration would fetch from
-    // Datahub / the network company. 0.20 DKK/kWh is a rough average.
-    tariffDkk: 0.20,
+    // Fixed tariff breakdown (incl. 25% VAT):
+    //   elafgift (electricity tax): ~0.699 DKK/kWh
+    //   network tariff (nettarif):  ~0.40 DKK/kWh
+    //   system tariff:              ~0.08 DKK/kWh
+    //   balancetariff/other:        ~0.22 DKK/kWh
+    //   Total:                      ~1.40 DKK/kWh
+    tariffDkk: 1.40,
   }))
 }
 
@@ -43,3 +47,15 @@ export async function fetchSpotPrices(
  * live rates from the Danish National Bank.
  */
 export const EUR_TO_DKK = 7.46
+
+/**
+ * VAT multiplier for Danish electricity (25%).
+ * Applied to the spot price component of retail price.
+ */
+export const VAT_MULTIPLIER = 1.25
+
+/**
+ * Feed-in multiplier: exported electricity is sold at 90% of spot price.
+ * No VAT or taxes apply to grid exports.
+ */
+export const FEED_IN_MULTIPLIER = 0.90

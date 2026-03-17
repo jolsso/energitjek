@@ -1,6 +1,7 @@
 import { useAppStore } from '@/store/appStore'
 import { SummaryCards } from './SummaryCards'
 import { MonthlyChart } from './MonthlyChart'
+import { MonthlySavingsChart } from './MonthlySavingsChart'
 
 export function ResultsPanel() {
   const { simulationResult, pvgisData } = useAppStore()
@@ -33,6 +34,7 @@ export function ResultsPanel() {
 
       <SummaryCards summary={simulationResult.summary} />
       <MonthlyChart hourly={simulationResult.hourly} />
+      <MonthlySavingsChart hourly={simulationResult.hourly} />
     </div>
   )
 }

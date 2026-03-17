@@ -6,7 +6,7 @@ import type {
   SimulationResult,
   SimulationSummary,
 } from '@/types'
-import { EUR_TO_DKK } from './energidataservice'
+import { EUR_TO_DKK, VAT_MULTIPLIER, FEED_IN_MULTIPLIER } from './energidataservice'
 import { pvgisTimeToISO } from './pvgis'
 
 /**
@@ -16,11 +16,11 @@ import { pvgisTimeToISO } from './pvgis'
 const FLAT_RETAIL_PRICE_DKK = 3.0
 
 /**
- * Feed-in tariff for grid export in DKK/kWh.
+ * Flat feed-in price used as fallback when no spot prices are provided.
  * Denmark does not offer a full net-metering scheme — surplus production is
  * sold at spot price minus grid fees, typically much lower than retail.
  */
-const FEED_IN_TARIFF_DKK = 0.10
+const FLAT_FEED_IN_PRICE_DKK = 0.10
 
 /**
  * Core simulation: joins hourly production, consumption, and optional prices
@@ -36,13 +36,13 @@ export function runSimulation(
   // Build hourly consumption profile (kWh)
   const consumptionProfile = buildConsumptionProfile(consumption, n)
 
-  // Build hourly price profile (DKK/kWh retail)
+  // Build hourly price profile (DKK/kWh retail and feed-in)
   const priceProfile = buildPriceProfile(prices, n)
 
   const hourly: HourlySimulation[] = pvgis.hourly.map((row, i) => {
     const productionKwh = row.P / 1000  // W → kWh (hourly average)
     const consumptionKwh = consumptionProfile[i]
-    const retailPrice = priceProfile[i]
+    const { retail: retailPrice, feedIn: feedInPrice } = priceProfile[i]
 
     const selfConsumedKwh = Math.min(productionKwh, consumptionKwh)
     const gridExportKwh = Math.max(0, productionKwh - consumptionKwh)
@@ -50,7 +50,7 @@ export function runSimulation(
 
     // Savings = avoided import cost + feed-in revenue
     const savedDkk =
-      selfConsumedKwh * retailPrice + gridExportKwh * FEED_IN_TARIFF_DKK
+      selfConsumedKwh * retailPrice + gridExportKwh * feedInPrice
 
     return {
       hourStart: pvgisTimeToISO(row.time),
@@ -76,13 +76,22 @@ function buildConsumptionProfile(data: ConsumptionData, n: number): number[] {
   return Array(n).fill(hourlyKwh)
 }
 
-function buildPriceProfile(prices: HourlyPrice[] | undefined, n: number): number[] {
+interface HourlyPrices {
+  retail: number
+  feedIn: number
+}
+
+function buildPriceProfile(prices: HourlyPrice[] | undefined, n: number): HourlyPrices[] {
   if (!prices || prices.length === 0) {
-    return Array(n).fill(FLAT_RETAIL_PRICE_DKK)
+    return Array(n).fill({ retail: FLAT_RETAIL_PRICE_DKK, feedIn: FLAT_FEED_IN_PRICE_DKK })
   }
   return prices.slice(0, n).map(p => {
     const spotDkk = (p.spotEur / 1000) * EUR_TO_DKK  // EUR/MWh → DKK/kWh
-    return spotDkk + p.tariffDkk
+    // Retail: spot (incl. VAT) + fixed tariffs
+    const retail = spotDkk * VAT_MULTIPLIER + p.tariffDkk
+    // Feed-in: 90% of spot price, no VAT or taxes on exports
+    const feedIn = spotDkk * FEED_IN_MULTIPLIER
+    return { retail, feedIn }
   })
 }
 

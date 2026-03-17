@@ -6,7 +6,7 @@ import type { Coordinates, PVGISData, SolarConfig } from '@/types'
 const PVGIS_BASE = '/api/pvgis'
 
 // Most recent year with confirmed full data in PVGIS
-const DATA_YEAR = 2023
+export const DATA_YEAR = 2023
 
 /**
  * Fetches hourly PV production data for a single year from PVGIS (EU Commission).

@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
+import { useState, useEffect, useRef } from 'react'
 import { ConsumptionForm } from '@/components/forms/ConsumptionForm'
 import { AddressForm } from '@/components/forms/AddressForm'
 import { PricingForm } from '@/components/forms/PricingForm'
+import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
 import { InvestmentForm } from '@/components/forms/InvestmentForm'
+import { AddressMap } from '@/components/map/AddressMap'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
 import { useSimulation } from '@/hooks/useSimulation'
@@ -13,16 +14,35 @@ export default function App() {
   const [step, setStep] = useState<'input' | 'results'>('input')
   const { runSimulation, isLoading, error } = useSimulation()
   const reset = useAppStore((s) => s.reset)
+  const solarConfig = useAppStore((s) => s.solarConfig)
+  const coordinates = useAppStore((s) => s.coordinates)
+  const address = useAppStore((s) => s.address)
+
+  // Always keep ref up-to-date so debounced callback never goes stale
+  const runSimulationRef = useRef(runSimulation)
+  runSimulationRef.current = runSimulation
 
   const handleCalculate = async () => {
     const ok = await runSimulation()
     if (ok) setStep('results')
   }
 
+  // Auto re-simulate when solar config changes while on results page
+  const isInitialMount = useRef(true)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    if (step !== 'results') return
+    const timer = setTimeout(() => { runSimulationRef.current() }, 700)
+    return () => clearTimeout(timer)
+  }, [solarConfig, step])
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         {step === 'input' ? (
           <div className="space-y-8">
             <div className="text-center space-y-3 mb-10">
@@ -35,8 +55,7 @@ export default function App() {
                 <span className="text-primary">solcelleøkonomi</span>
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto text-base leading-relaxed">
-                Indtast din adresse og solcelleanlæggets specifikationer for at
-                se, hvad du kan spare.
+                Indtast din adresse og forbrug — du kan justere solcelleanlægget live på næste trin.
               </p>
             </div>
 
@@ -44,10 +63,10 @@ export default function App() {
               <div className="space-y-4">
                 <AddressForm />
                 <ConsumptionForm />
-                <PricingForm />
-                <InvestmentForm />
               </div>
-              <SolarConfigForm />
+              <div className="space-y-4">
+                <PricingForm />
+              </div>
             </div>
 
             {error && (
@@ -60,7 +79,7 @@ export default function App() {
               <button
                 onClick={handleCalculate}
                 disabled={isLoading}
-                className="group relative px-10 py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold text-base hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                className="px-10 py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold text-base hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
               >
                 {isLoading ? 'Beregner…' : 'Beregn besparelse'}
               </button>
@@ -74,16 +93,40 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <button
                 onClick={() => setStep('input')}
                 className="text-sm text-muted-foreground hover:text-foreground underline"
               >
-                ← Ret indstillinger
+                ← Ret adresse og forbrug
               </button>
+              {isLoading && (
+                <span className="text-xs text-muted-foreground animate-pulse">
+                  Opdaterer simulering…
+                </span>
+              )}
             </div>
-            <ResultsPanel />
+
+            <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 items-start">
+              {/* Sticky left sidebar — solar config + investment + map */}
+              <div className="space-y-4 lg:sticky lg:top-20">
+                <SolarConfigForm />
+                <InvestmentForm />
+                {coordinates && (
+                  <AddressMap
+                    coordinates={coordinates}
+                    displayName={address}
+                    azimuthDeg={solarConfig.azimuthDeg}
+                  />
+                )}
+              </div>
+
+              {/* Results */}
+              <div className="min-w-0">
+                <ResultsPanel />
+              </div>
+            </div>
           </div>
         )}
       </main>

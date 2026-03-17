@@ -27,7 +27,7 @@ interface AppState {
   setPostcode: (postcode: string) => void
   setCoordinates: (coords: Coordinates | null) => void
   setSolarConfig: (config: Partial<SolarConfig>) => void
-  setConsumption: (consumption: Partial<ConsumptionData>) => void
+  setConsumption: (consumption: Partial<ConsumptionData> & { hourlyKwh?: number[] | undefined }) => void
   setPriceArea: (area: PriceArea) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void

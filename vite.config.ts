@@ -16,6 +16,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/pvgis/, ''),
       },
+      '/api/eloverblik': {
+        target: 'https://api.eloverblik.dk/customerapi',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/eloverblik/, ''),
+      },
     },
   },
   test: {

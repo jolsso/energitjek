@@ -1,8 +1,10 @@
 import { Zap } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
+import { EloverblikForm } from './EloverblikForm'
 
 export function ConsumptionForm() {
   const { consumption, setConsumption } = useAppStore()
+  const isEloverblik = consumption.source === 'eloverblik'
 
   return (
     <div className="rounded-lg border border-border bg-card p-5 space-y-4">
@@ -13,7 +15,7 @@ export function ConsumptionForm() {
 
       <div className="space-y-1">
         <div className="flex justify-between text-sm">
-          <label htmlFor="annual-kwh" className="font-medium">
+          <label htmlFor="annual-kwh" className={`font-medium ${isEloverblik ? 'text-muted-foreground' : ''}`}>
             Årligt elforbrug
           </label>
           <span className="text-muted-foreground">{consumption.annualKwh.toLocaleString('da-DK')} kWh</span>
@@ -25,22 +27,18 @@ export function ConsumptionForm() {
           max={30000}
           step={250}
           value={consumption.annualKwh}
-          onChange={(e) => setConsumption({ annualKwh: parseInt(e.target.value) })}
-          className="w-full accent-primary"
+          onChange={(e) => setConsumption({ annualKwh: parseInt(e.target.value), source: 'manual', hourlyKwh: undefined })}
+          disabled={isEloverblik}
+          className="w-full accent-primary disabled:opacity-40"
         />
         <p className="text-xs text-muted-foreground">
-          En gennemsnitlig dansk husstand bruger ca. 5.000 kWh/år
+          {isEloverblik
+            ? 'Brug Nulstil nedenfor for at skifte til manuel indtastning.'
+            : 'En gennemsnitlig dansk husstand bruger ca. 5.000 kWh/år'}
         </p>
       </div>
 
-      <div>
-        <p className="text-xs text-muted-foreground">
-          Vil du bruge dit faktiske forbrug?{' '}
-          <span className="text-muted-foreground italic">
-            Eloverblik-integration kommer snart.
-          </span>
-        </p>
-      </div>
+      <EloverblikForm />
     </div>
   )
 }

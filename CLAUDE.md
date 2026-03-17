@@ -29,6 +29,12 @@ npm test
 # Run tests in watch mode
 npm run test:watch
 
+# Run integration tests (requires dev server or starts it automatically)
+npm run test:e2e
+
+# Open Playwright interactive UI
+npm run test:e2e:ui
+
 # Production build
 npm run build
 

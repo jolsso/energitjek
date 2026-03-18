@@ -13,6 +13,9 @@ export function Header({ onPrivacy }: Props) {
             <Zap className="h-4 w-4 text-white" strokeWidth={2.5} />
           </div>
           <span className="font-semibold text-base tracking-tight">Er du sunshine?</span>
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 border border-amber-200">
+            dev
+          </span>
         </div>
         <button
           onClick={onPrivacy}

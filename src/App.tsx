@@ -55,7 +55,7 @@ export default function App() {
                 <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
                 Gratis · Ingen login · Ingen sporing
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                 Beregn din{' '}
                 <span className="text-primary">solcelleøkonomi</span>
               </h1>

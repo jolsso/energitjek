@@ -107,7 +107,7 @@ export function MonthlyChart({ hourly }: Props) {
           Stablet efter hvad solcellerne dækker, hvad der eksporteres, og hvad der stadig importeres fra nettet.
         </p>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={260} minHeight={200}>
         <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap="30%">
           <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
           <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />

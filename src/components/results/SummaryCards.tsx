@@ -54,18 +54,18 @@ export function SummaryCards({ summary, investmentDkk = 0 }: Props) {
   ]
 
   return (
-    <div className="grid grid-cols-3 gap-4" style={{ gridAutoRows: '1fr' }}>
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4" style={{ gridAutoRows: '1fr' }}>
       {cards.map(({ icon: Icon, label, value, sub }) => (
         <div
           key={label}
-          className="rounded-xl border border-border bg-card card-shadow p-4 space-y-2"
+          className="rounded-xl border border-border bg-card card-shadow p-3 sm:p-4 space-y-1.5 sm:space-y-2"
         >
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Icon className="h-4 w-4 text-primary" />
-            {label}
+          <div className="flex items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
+            <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+            <span className="leading-tight">{label}</span>
           </div>
-          <div className="text-2xl font-bold">{value}</div>
-          <div className="text-xs text-muted-foreground">{sub}</div>
+          <div className="text-xl sm:text-2xl font-bold">{value}</div>
+          <div className="text-xs text-muted-foreground leading-tight">{sub}</div>
         </div>
       ))}
     </div>

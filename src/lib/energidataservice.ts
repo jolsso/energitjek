@@ -43,6 +43,35 @@ export async function fetchSpotPrices(
 }
 
 /**
+ * Fetches hourly grid CO2 emission factors (kg CO2eq/kWh) for a given year
+ * and price area from Energidataservice (DeclarationEmissionHour dataset).
+ * Returns an array of 8760/8784 values indexed by hour-of-year.
+ */
+export async function fetchCO2Emissions(
+  year: number,
+  area: PriceArea,
+): Promise<number[]> {
+  const start = `${year}-01-01T00:00`
+  const end   = `${year + 1}-01-01T00:00`
+
+  const params = new URLSearchParams({
+    start,
+    end,
+    filter: JSON.stringify({ PriceArea: area }),
+    sort:   'HourDK asc',
+    limit:  '8784',
+  })
+
+  const res = await fetch(`${EDS_BASE}/DeclarationEmissionHour?${params}`)
+  if (!res.ok) throw new Error(`CO2-data fejlede: ${res.status}`)
+
+  const json = await res.json()
+  // CO2Emission is in g CO2eq/kWh — convert to kg/kWh
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return json.records.map((r: any) => (r.CO2Emission ?? 130) / 1000)
+}
+
+/**
  * Approximate EUR → DKK conversion. In a future version this could fetch
  * live rates from the Danish National Bank.
  */

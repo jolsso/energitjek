@@ -40,6 +40,7 @@ export function runSimulation(
   pvgis: PVGISData,
   consumption: ConsumptionData,
   prices?: HourlyPrice[],
+  co2FactorsKgPerKwh?: number[],
 ): SimulationResult {
   const n = pvgis.hourly.length  // 8760 or 8784
 
@@ -78,7 +79,7 @@ export function runSimulation(
     }
   })
 
-  const summary = computeSummary(hourly, consumption.annualKwh)
+  const summary = computeSummary(hourly, consumption.annualKwh, co2FactorsKgPerKwh)
   return { hourly, summary }
 }
 
@@ -141,7 +142,7 @@ function buildPriceProfile(prices: HourlyPrice[] | undefined, n: number): Hourly
   })
 }
 
-function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number): SimulationSummary {
+function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number, co2Factors?: number[]): SimulationSummary {
   const annualProductionKwh = hourly.reduce((s, h) => s + h.productionKwh, 0)
   const totalSelfConsumed = hourly.reduce((s, h) => s + h.selfConsumedKwh, 0)
   const annualSavedDkk = hourly.reduce((s, h) => s + h.savedDkk, 0)
@@ -154,7 +155,10 @@ function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number
     ? (totalSelfConsumed / annualConsumptionKwh) * 100
     : 0
 
-  const co2SavedKg = totalSelfConsumed * CO2_GRID_FACTOR_KG_PER_KWH
+  const co2SavedKg = hourly.reduce((s, h, i) => {
+    const factor = co2Factors?.[i] ?? CO2_GRID_FACTOR_KG_PER_KWH
+    return s + h.selfConsumedKwh * factor
+  }, 0)
 
   return {
     annualProductionKwh,

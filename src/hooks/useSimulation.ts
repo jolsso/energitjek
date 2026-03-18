@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { fetchPVGISData, DATA_YEAR } from '@/lib/pvgis'
-import { fetchSpotPrices, VAT_MULTIPLIER } from '@/lib/energidataservice'
+import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER } from '@/lib/energidataservice'
 import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK } from '@/lib/gridtariff'
 import { runSimulation } from '@/lib/simulation'
 import type { HourlyPrice } from '@/types'
@@ -33,7 +33,7 @@ export function useSimulation() {
       // Fetch PVGIS, spot prices, and grid tariff in parallel
       const dso = dsoFromPostcode(postcode)
 
-      const [pvgis, rawPrices, tariff24] = await Promise.all([
+      const [pvgis, rawPrices, tariff24, co2Factors] = await Promise.all([
         fetchPVGISData(coordinates, solarConfig),
         fetchSpotPrices(DATA_YEAR, priceArea).catch((err) => {
           console.warn('Spotpriser ikke tilgængelige — bruger faste priser.', err)
@@ -45,6 +45,10 @@ export function useSimulation() {
               return null
             })
           : Promise.resolve(null),
+        fetchCO2Emissions(DATA_YEAR, priceArea).catch((err) => {
+          console.warn('CO2-emissionsdata ikke tilgængelig — bruger fast faktor.', err)
+          return null
+        }),
       ])
 
       setPVGISData(pvgis)
@@ -60,7 +64,7 @@ export function useSimulation() {
         }))
       }
 
-      const result = runSimulation(pvgis, consumption, prices)
+      const result = runSimulation(pvgis, consumption, prices, co2Factors ?? undefined)
       setSimulationResult(result)
       return true
     } catch (e) {

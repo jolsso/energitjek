@@ -74,13 +74,37 @@ export function runSimulation(
   return { hourly, summary }
 }
 
+/**
+ * Relative consumption weights by hour of day (0–23).
+ * Represents a typical Danish single-family household:
+ * low at night, morning and evening peaks, lower midday.
+ * Un-normalized — buildConsumptionProfile scales to annualKwh.
+ */
+const HOURLY_SHAPE: readonly number[] = [
+  0.28, 0.23, 0.20, 0.19, 0.19, 0.27,  // 00–05  night
+  0.55, 0.95, 0.85, 0.72, 0.65, 0.65,  // 06–11  morning
+  0.70, 0.65, 0.62, 0.68, 0.90, 1.25,  // 12–17  midday / ramp-up
+  1.45, 1.55, 1.45, 1.25, 0.92, 0.56,  // 18–23  evening / wind-down
+]
+
+/**
+ * Day-of-week multiplier indexed from Sunday (0) to Saturday (6).
+ * Jan 1 2023 (simulation start) is a Sunday, so index 0 = hour 0.
+ * Weekends have higher daytime use; weekdays slightly lower (people at work).
+ */
+const DAY_WEIGHTS: readonly number[] = [1.08, 0.95, 0.95, 0.97, 0.97, 1.02, 1.12]
+
 function buildConsumptionProfile(data: ConsumptionData, n: number): number[] {
   if (data.hourlyKwh && data.hourlyKwh.length === n) {
     return data.hourlyKwh
   }
-  // Flat profile: distribute annual kWh evenly across all hours
-  const hourlyKwh = data.annualKwh / n
-  return Array(n).fill(hourlyKwh)
+  // Weekly shape: combine hour-of-day profile with day-of-week weight,
+  // then normalize so the total equals annualKwh.
+  const weights = Array.from({ length: n }, (_, i) =>
+    HOURLY_SHAPE[i % 24] * DAY_WEIGHTS[Math.floor(i / 24) % 7]
+  )
+  const scale = data.annualKwh / weights.reduce((s, w) => s + w, 0)
+  return weights.map(w => w * scale)
 }
 
 interface HourlyPrices {

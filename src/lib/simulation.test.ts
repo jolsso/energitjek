@@ -79,16 +79,22 @@ describe('runSimulation — energy flows', () => {
 // --- runSimulation: consumption profiles ---
 
 describe('runSimulation — consumption profiles', () => {
-  it('flat profile distributes annual kWh evenly', () => {
-    const n = 4
-    const annualKwh = 8760  // exactly 1 kWh per hour for a year
-    const pvgis = makePVGIS(Array(n).fill(0))
+  it('weekly profile sums to annual kWh', () => {
+    const annualKwh = 5000
+    const pvgis = makePVGIS(Array(168).fill(0))  // one full week
     const result = runSimulation(pvgis, { source: 'manual', annualKwh })
 
-    const expectedHourly = annualKwh / n
-    result.hourly.forEach(h => {
-      expect(h.consumptionKwh).toBeCloseTo(expectedHourly)
-    })
+    const total = result.hourly.reduce((s, h) => s + h.consumptionKwh, 0)
+    expect(total).toBeCloseTo(annualKwh)
+  })
+
+  it('weekly profile varies by hour of day', () => {
+    const pvgis = makePVGIS(Array(24).fill(0))  // one full day (Sunday)
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 1000 })
+
+    const hourly = result.hourly.map(h => h.consumptionKwh)
+    // Evening peak (hour 19) should exceed night valley (hour 3)
+    expect(hourly[19]).toBeGreaterThan(hourly[3])
   })
 
   it('uses provided hourly profile when length matches', () => {
@@ -101,14 +107,13 @@ describe('runSimulation — consumption profiles', () => {
     })
   })
 
-  it('falls back to flat profile when hourly length mismatches', () => {
+  it('falls back to weekly profile when hourly length mismatches', () => {
     const pvgis = makePVGIS([0, 0, 0])
-    // hourlyKwh has 2 entries but pvgis has 3 hours
+    // hourlyKwh has 2 entries but pvgis has 3 hours — should ignore and use weekly profile
     const result = runSimulation(pvgis, { source: 'manual', annualKwh: 6, hourlyKwh: [1, 2] })
 
-    result.hourly.forEach(h => {
-      expect(h.consumptionKwh).toBeCloseTo(2)  // 6 / 3
-    })
+    const total = result.hourly.reduce((s, h) => s + h.consumptionKwh, 0)
+    expect(total).toBeCloseTo(6)
   })
 })
 

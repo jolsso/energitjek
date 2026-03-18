@@ -2,6 +2,7 @@ import { Zap, CheckCircle2 } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import type { PriceArea } from '@/lib/energidataservice'
 import { dsoFromPostcode } from '@/lib/gridtariff'
+import { ComingSoon } from '@/components/ComingSoon'
 
 const AREAS: { value: PriceArea; label: string }[] = [
   { value: 'DK1', label: 'DK1 — Vest (Jylland/Fyn)' },
@@ -47,16 +48,17 @@ export function PricingForm() {
         })}
       </div>
 
-      {dso ? (
-        <p className="text-xs text-muted-foreground">
-          Netselskab: <span className="font-medium text-foreground">{dso.name}</span>
-          {' — '}reelle timebaserede nettariffer hentes automatisk.
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">
-          Bestemmes automatisk fra postnummer. Du kan overskrive manuelt.
-        </p>
-      )}
+      <ComingSoon phase="Phase 2b" title="Netselskab">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">Netselskab</label>
+          <div className="flex items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2">
+            <span className="text-sm text-muted-foreground">
+              {dso ? dso.name : 'Bestemmes fra postnummer'}
+            </span>
+            <span className="text-xs text-muted-foreground">Auto</span>
+          </div>
+        </div>
+      </ComingSoon>
     </div>
   )
 }

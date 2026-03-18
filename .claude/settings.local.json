@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python app.py)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(npm test:*)",
+      "Bash(npm init:*)",
+      "Bash(npx playwright:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:api.energidataservice.dk)",
+      "WebSearch",
+      "WebFetch(domain:docs.eloverblik.dk)",
+      "WebFetch(domain:developer.eloverblik.dk)",
+      "WebFetch(domain:api.eloverblik.dk)",
+      "WebFetch(domain:energinet.dk)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:community.openhab.org)",
+      "WebFetch(domain:packagist.org)",
+      "WebFetch(domain:energitjek.vercel.app)"
+    ]
+  }
+}

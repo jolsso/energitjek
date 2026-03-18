@@ -8,7 +8,7 @@ export function Header() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
             <Zap className="h-4 w-4 text-white" strokeWidth={2.5} />
           </div>
-          <span className="font-semibold text-base tracking-tight">Energitjek</span>
+          <span className="font-semibold text-base tracking-tight">Er du sunshine?</span>
         </div>
         <span className="text-xs text-muted-foreground hidden sm:block">
           Dine data forlader ikke din browser

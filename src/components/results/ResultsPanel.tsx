@@ -1,5 +1,6 @@
 import { useAppStore } from '@/store/appStore'
 import { SummaryCards } from './SummaryCards'
+import { EnergyFlowChart } from './EnergyFlowChart'
 import { MonthlyChart } from './MonthlyChart'
 import { MonthlySavingsChart } from './MonthlySavingsChart'
 import { PaybackChart } from './PaybackChart'
@@ -34,6 +35,7 @@ export function ResultsPanel() {
       </div>
 
       <SummaryCards summary={simulationResult.summary} investmentDkk={investmentDkk} />
+      <EnergyFlowChart summary={simulationResult.summary} />
       <MonthlyChart hourly={simulationResult.hourly} />
       <MonthlySavingsChart hourly={simulationResult.hourly} />
       {investmentDkk > 0 && (

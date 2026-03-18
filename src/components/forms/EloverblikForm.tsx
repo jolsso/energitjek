@@ -10,7 +10,7 @@ type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export function EloverblikForm() {
   const { setConsumption } = useAppStore()
-  const [token, setToken] = useState('')
+  const [token, setToken] = useState(import.meta.env.VITE_ELOVERBLIK_TOKEN ?? '')
   const [rememberToken, setRememberToken] = useState(false)
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)

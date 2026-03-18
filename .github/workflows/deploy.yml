@@ -1,0 +1,21 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel (production)
+        if: github.ref == 'refs/heads/main'
+        run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+
+      - name: Deploy to Vercel (preview)
+        if: github.ref == 'refs/heads/dev'
+        run: npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes

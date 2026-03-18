@@ -35,15 +35,15 @@ export function ResultsPanel() {
       </div>
 
       <SummaryCards summary={simulationResult.summary} investmentDkk={investmentDkk} />
-      <EnergyFlowChart summary={simulationResult.summary} />
-      <MonthlyChart hourly={simulationResult.hourly} />
-      <MonthlySavingsChart hourly={simulationResult.hourly} />
       {investmentDkk > 0 && (
         <PaybackChart
           investmentDkk={investmentDkk}
           annualSavedDkk={simulationResult.summary.annualSavedDkk}
         />
       )}
+      <EnergyFlowChart summary={simulationResult.summary} />
+      <MonthlyChart hourly={simulationResult.hourly} />
+      <MonthlySavingsChart hourly={simulationResult.hourly} />
     </div>
   )
 }

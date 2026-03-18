@@ -1,4 +1,5 @@
 import type {
+  BatteryConfig,
   ConsumptionData,
   HourlyPrice,
   HourlySimulation,
@@ -41,6 +42,7 @@ export function runSimulation(
   consumption: ConsumptionData,
   prices?: HourlyPrice[],
   co2FactorsKgPerKwh?: number[],
+  battery?: BatteryConfig,
 ): SimulationResult {
   const n = pvgis.hourly.length  // 8760 or 8784
 
@@ -50,14 +52,62 @@ export function runSimulation(
   // Build hourly price profile (DKK/kWh retail and feed-in)
   const priceProfile = buildPriceProfile(prices, n)
 
-  const hourly: HourlySimulation[] = pvgis.hourly.map((row, i) => {
+  // Battery setup: efficiency split evenly across charge and discharge halves
+  // Round-trip eta=0.90 → store sqrtEta per half-cycle, so charge×discharge = eta
+  const sqrtEta = battery ? Math.sqrt(battery.roundTripEfficiencyPct / 100) : 1
+  let soc = 0  // battery state of charge (kWh stored)
+
+  // Time-of-use: precompute daily average spot prices for discharge gating
+  const dailyAvgSpot: number[] = []
+  if (battery?.strategy === 'time-of-use') {
+    const days = Math.ceil(n / 24)
+    for (let d = 0; d < days; d++) {
+      const slice = priceProfile.slice(d * 24, d * 24 + 24)
+      dailyAvgSpot.push(slice.reduce((s, p) => s + p.spot, 0) / slice.length)
+    }
+  }
+
+  const hourly: HourlySimulation[] = []
+
+  for (let i = 0; i < n; i++) {
+    const row = pvgis.hourly[i]
     const productionKwh = row.P / 1000  // W → kWh (hourly average)
     const consumptionKwh = consumptionProfile[i]
     const { feedIn: feedInPrice, spot: spotPrice, tariff: tariffPrice } = priceProfile[i]
 
-    const selfConsumedKwh = Math.min(productionKwh, consumptionKwh)
-    const gridExportKwh = Math.max(0, productionKwh - consumptionKwh)
-    const gridImportKwh = Math.max(0, consumptionKwh - productionKwh)
+    let surplus = Math.max(0, productionKwh - consumptionKwh)
+    let deficit  = Math.max(0, consumptionKwh - productionKwh)
+    let batteryChargeKwh    = 0
+    let batteryDischargeKwh = 0
+
+    if (battery) {
+      // --- Charge: absorb surplus into battery ---
+      // spaceInput: max kWh input that fills battery to capacity (accounting for charge loss)
+      const spaceInput = (battery.capacityKwh - soc) / sqrtEta
+      batteryChargeKwh = Math.min(surplus, battery.maxChargeKw, spaceInput)
+      batteryChargeKwh = Math.max(0, batteryChargeKwh)
+      soc = Math.min(battery.capacityKwh, soc + batteryChargeKwh * sqrtEta)
+      surplus -= batteryChargeKwh
+
+      // --- Discharge: cover deficit from battery ---
+      // For time-of-use: only discharge when spot > daily average (save battery for peak hours)
+      const shouldDischarge = battery.strategy !== 'time-of-use'
+        || spotPrice >= (dailyAvgSpot[Math.floor(i / 24)] ?? 0)
+      if (shouldDischarge && deficit > 0) {
+        // availableOut: max kWh deliverable to load from current soc
+        const availableOut = soc * sqrtEta
+        batteryDischargeKwh = Math.min(deficit, battery.maxDischargeKw, availableOut)
+        batteryDischargeKwh = Math.max(0, batteryDischargeKwh)
+        soc = Math.max(0, soc - batteryDischargeKwh / sqrtEta)
+        deficit -= batteryDischargeKwh
+      }
+    }
+
+    // selfConsumedKwh: direct solar use + battery discharge delivered to load
+    const directUse      = Math.min(productionKwh, consumptionKwh)
+    const selfConsumedKwh = directUse + batteryDischargeKwh
+    const gridExportKwh   = surplus
+    const gridImportKwh   = deficit
 
     // Savings breakdown: avoided spot cost + avoided tariffs + feed-in revenue
     const spotSavedDkk   = selfConsumedKwh * spotPrice
@@ -65,7 +115,7 @@ export function runSimulation(
     const feedInDkk      = gridExportKwh   * feedInPrice
     const savedDkk       = spotSavedDkk + tariffSavedDkk + feedInDkk
 
-    return {
+    const entry: HourlySimulation = {
       hourStart: pvgisTimeToISO(row.time),
       consumptionKwh,
       productionKwh,
@@ -77,7 +127,13 @@ export function runSimulation(
       tariffSavedDkk,
       feedInDkk,
     }
-  })
+    if (battery) {
+      entry.batteryChargeKwh    = batteryChargeKwh
+      entry.batteryDischargeKwh = batteryDischargeKwh
+      entry.batteryStateKwh     = soc
+    }
+    hourly.push(entry)
+  }
 
   const summary = computeSummary(hourly, consumption.annualKwh, co2FactorsKgPerKwh)
   return { hourly, summary }
@@ -123,16 +179,18 @@ interface HourlyPrices {
   tariff: number   // fixed tariff DKK/kWh
 }
 
+const FLAT_PRICES: HourlyPrices = {
+  retail: FLAT_SPOT_DKK + FLAT_TARIFF_DKK,
+  feedIn: FLAT_FEED_IN_PRICE_DKK,
+  spot:   FLAT_SPOT_DKK,
+  tariff: FLAT_TARIFF_DKK,
+}
+
 function buildPriceProfile(prices: HourlyPrice[] | undefined, n: number): HourlyPrices[] {
   if (!prices || prices.length === 0) {
-    return Array(n).fill({
-      retail: FLAT_SPOT_DKK + FLAT_TARIFF_DKK,
-      feedIn: FLAT_FEED_IN_PRICE_DKK,
-      spot: FLAT_SPOT_DKK,
-      tariff: FLAT_TARIFF_DKK,
-    })
+    return Array(n).fill(FLAT_PRICES)
   }
-  return prices.slice(0, n).map(p => {
+  const mapped = prices.slice(0, n).map(p => {
     const spotDkk = (p.spotEur / 1000) * EUR_TO_DKK  // EUR/MWh → DKK/kWh
     const spot = spotDkk * VAT_MULTIPLIER
     const tariff = p.tariffDkk
@@ -140,6 +198,11 @@ function buildPriceProfile(prices: HourlyPrice[] | undefined, n: number): Hourly
     const feedIn = spotDkk * FEED_IN_MULTIPLIER
     return { retail, feedIn, spot, tariff }
   })
+  // Pad with flat prices if the provided array is shorter than the simulation period
+  if (mapped.length < n) {
+    return [...mapped, ...Array(n - mapped.length).fill(FLAT_PRICES)]
+  }
+  return mapped
 }
 
 function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number, co2Factors?: number[]): SimulationSummary {

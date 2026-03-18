@@ -16,6 +16,7 @@ export function useSimulation() {
     solarConfig,
     consumption,
     priceArea,
+    batteryConfig,
     setPVGISData,
     setSimulationResult,
   } = useAppStore()
@@ -64,7 +65,7 @@ export function useSimulation() {
         }))
       }
 
-      const result = runSimulation(pvgis, consumption, prices, co2Factors ?? undefined)
+      const result = runSimulation(pvgis, consumption, prices, co2Factors ?? undefined, batteryConfig ?? undefined)
       setSimulationResult(result)
       return true
     } catch (e) {

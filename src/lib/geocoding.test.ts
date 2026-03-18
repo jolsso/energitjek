@@ -15,6 +15,16 @@ describe('priceAreaFromPostcode', () => {
     expect(priceAreaFromPostcode('3700')).toBe('DK2')  // Bornholm
     expect(priceAreaFromPostcode('4000')).toBe('DK2')  // Roskilde
   })
+
+  it('handles the exact boundary: 4999 → DK2, 5000 → DK1', () => {
+    expect(priceAreaFromPostcode('4999')).toBe('DK2')
+    expect(priceAreaFromPostcode('5000')).toBe('DK1')
+  })
+
+  it('falls back to DK2 for missing or invalid postcode', () => {
+    expect(priceAreaFromPostcode('')).toBe('DK2')
+    expect(priceAreaFromPostcode('abc')).toBe('DK2')
+  })
 })
 
 describe('geocodeAddress', () => {

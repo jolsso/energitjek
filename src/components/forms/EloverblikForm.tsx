@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Loader2, CheckCircle2, XCircle, ExternalLink, ShieldAlert } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { fetchDataAccessToken, fetchMeteringPointId, fetchHourlyConsumption, clearTokenCache } from '@/lib/eloverblik'
@@ -10,20 +10,15 @@ type Status = 'idle' | 'loading' | 'success' | 'error'
 
 export function EloverblikForm() {
   const { setConsumption } = useAppStore()
-  const [token, setToken] = useState(import.meta.env.VITE_ELOVERBLIK_TOKEN ?? '')
-  const [rememberToken, setRememberToken] = useState(false)
+  const [token, setToken] = useState(
+    () => localStorage.getItem(STORAGE_KEY) ?? import.meta.env.VITE_ELOVERBLIK_TOKEN ?? ''
+  )
+  const [rememberToken, setRememberToken] = useState(
+    () => Boolean(localStorage.getItem(STORAGE_KEY))
+  )
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [fetchedKwh, setFetchedKwh] = useState<number | null>(null)
-
-  // Pre-fill token from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      setToken(saved)
-      setRememberToken(true)
-    }
-  }, [])
 
   const handleFetch = async () => {
     if (!token.trim()) return

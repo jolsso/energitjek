@@ -8,7 +8,6 @@ import { BatteryConfigForm } from '@/components/forms/BatteryConfigForm'
 import { AddressMap } from '@/components/map/AddressMap'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
-import { ComingSoon } from '@/components/ComingSoon'
 import { PrivacyPage } from '@/components/PrivacyPage'
 import { useSimulation } from '@/hooks/useSimulation'
 import { useAppStore } from '@/store/appStore'
@@ -18,6 +17,7 @@ export default function App() {
   const { runSimulation, isLoading, error } = useSimulation()
   const reset = useAppStore((s) => s.reset)
   const solarConfig = useAppStore((s) => s.solarConfig)
+  const batteryConfig = useAppStore((s) => s.batteryConfig)
   const coordinates = useAppStore((s) => s.coordinates)
   const address = useAppStore((s) => s.address)
 
@@ -40,7 +40,7 @@ export default function App() {
     if (step !== 'results') return
     const timer = setTimeout(() => { runSimulationRef.current() }, 700)
     return () => clearTimeout(timer)
-  }, [solarConfig, step])
+  }, [solarConfig, batteryConfig, step])
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,9 +130,7 @@ export default function App() {
                 )}
                 <SolarConfigForm />
                 <InvestmentForm />
-                <ComingSoon phase="Phase 4" title="Batterisimulering">
-                  <BatteryConfigForm />
-                </ComingSoon>
+                <BatteryConfigForm />
               </div>
 
               {/* Results */}

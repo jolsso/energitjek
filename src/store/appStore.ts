@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type {
+  BatteryConfig,
   Coordinates,
   SolarConfig,
   ConsumptionData,
@@ -18,6 +19,7 @@ interface AppState {
   consumption: ConsumptionData
   priceArea: PriceArea
   investmentDkk: number
+  batteryConfig: BatteryConfig | null
 
   // Fetched data (not persisted — refetched as needed)
   pvgisData: PVGISData | null
@@ -31,6 +33,7 @@ interface AppState {
   setConsumption: (consumption: Partial<ConsumptionData> & { hourlyKwh?: number[] | undefined }) => void
   setPriceArea: (area: PriceArea) => void
   setInvestmentDkk: (dkk: number) => void
+  setBatteryConfig: (config: BatteryConfig | null) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
   reset: () => void
@@ -58,6 +61,7 @@ export const useAppStore = create<AppState>()(
       consumption: DEFAULT_CONSUMPTION,
       priceArea: 'DK2',
       investmentDkk: 0,
+      batteryConfig: null,
       pvgisData: null,
       simulationResult: null,
 
@@ -70,6 +74,7 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ consumption: { ...s.consumption, ...consumption } })),
       setPriceArea: (priceArea) => set({ priceArea }),
       setInvestmentDkk: (investmentDkk) => set({ investmentDkk }),
+      setBatteryConfig: (batteryConfig) => set({ batteryConfig }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
       reset: () =>
@@ -81,6 +86,7 @@ export const useAppStore = create<AppState>()(
           consumption: DEFAULT_CONSUMPTION,
           priceArea: 'DK2',
           investmentDkk: 0,
+          batteryConfig: null,
           pvgisData: null,
           simulationResult: null,
         }),
@@ -94,6 +100,7 @@ export const useAppStore = create<AppState>()(
         solarConfig: s.solarConfig,
         priceArea: s.priceArea,
         investmentDkk: s.investmentDkk,
+        batteryConfig: s.batteryConfig,
         consumption: {
           source: s.consumption.source,
           annualKwh: s.consumption.annualKwh,

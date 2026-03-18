@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { runSimulation } from './simulation'
-import type { ConsumptionData, HourlyPrice, PVGISData } from '@/types'
+import type { BatteryConfig, ConsumptionData, HourlyPrice, PVGISData } from '@/types'
 
 // --- Helpers ---
 
@@ -166,6 +166,85 @@ describe('runSimulation — savings', () => {
     expect(result.hourly[1].savedDkk).toBeCloseTo(2.50)  // peak hour
     // Annual savings = sum of both
     expect(result.summary.annualSavedDkk).toBeCloseTo(3.50)
+  })
+})
+
+// --- runSimulation: battery ---
+
+const DEFAULT_BATTERY: BatteryConfig = {
+  capacityKwh: 10,
+  maxChargeKw: 10,
+  maxDischargeKw: 10,
+  roundTripEfficiencyPct: 100,  // 100% for deterministic tests
+  strategy: 'self-consumption',
+}
+
+describe('runSimulation — battery (self-consumption)', () => {
+  it('without battery: surplus is exported', () => {
+    // Hour 0: 2 kWh production, 1 kWh consumption → 1 kWh export
+    const pvgis = makePVGIS([2000])
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 1, hourlyKwh: [1] })
+    expect(result.hourly[0].gridExportKwh).toBeCloseTo(1)
+    expect(result.hourly[0].batteryChargeKwh).toBeUndefined()
+  })
+
+  it('battery charges surplus instead of exporting', () => {
+    // Hour 0: 2 kWh production, 1 kWh consumption → 1 kWh charged to battery
+    const pvgis = makePVGIS([2000])
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 1, hourlyKwh: [1] }, undefined, undefined, DEFAULT_BATTERY)
+    expect(result.hourly[0].batteryChargeKwh).toBeCloseTo(1)
+    expect(result.hourly[0].gridExportKwh).toBeCloseTo(0)
+    expect(result.hourly[0].batteryStateKwh).toBeCloseTo(1)
+  })
+
+  it('battery discharges to cover deficit', () => {
+    // Hour 0: 2 kWh surplus → charged; Hour 1: 0 kWh production, 1 kWh consumption → discharge
+    const pvgis = makePVGIS([2000, 0])
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 2, hourlyKwh: [1, 1] }, undefined, undefined, DEFAULT_BATTERY)
+    const h1 = result.hourly[1]
+    expect(h1.batteryDischargeKwh).toBeCloseTo(1)
+    expect(h1.gridImportKwh).toBeCloseTo(0)
+    expect(h1.selfConsumedKwh).toBeCloseTo(1)  // covered by battery
+  })
+
+  it('battery respects capacity limit', () => {
+    // 10 kWh surplus, battery capacity = 10 kWh → fills exactly
+    const pvgis = makePVGIS([11000])  // 11 kWh production
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 1, hourlyKwh: [1] }, undefined, undefined, DEFAULT_BATTERY)
+    expect(result.hourly[0].batteryStateKwh).toBeCloseTo(10)  // capped at capacity
+    expect(result.hourly[0].batteryChargeKwh).toBeCloseTo(10)
+    expect(result.hourly[0].gridExportKwh).toBeCloseTo(0)    // 11 - 1 direct - 10 charged = 0
+  })
+
+  it('battery does not discharge below zero', () => {
+    // Empty battery → no discharge
+    const pvgis = makePVGIS([0])
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 1, hourlyKwh: [1] }, undefined, undefined, DEFAULT_BATTERY)
+    expect(result.hourly[0].batteryDischargeKwh).toBeCloseTo(0)
+    expect(result.hourly[0].gridImportKwh).toBeCloseTo(1)  // unmet from grid
+  })
+
+  it('battery improves selfConsumptionPct and coveragePct', () => {
+    // Without battery: 4 hours, alternating surplus and deficit
+    // Hour 0,2: 2 kWh prod, 0 kWh cons → export; Hour 1,3: 0 kWh prod, 1 kWh cons → import
+    const pvgis = makePVGIS([2000, 0, 2000, 0])
+    const consumption = { source: 'manual' as const, annualKwh: 2, hourlyKwh: [0, 1, 0, 1] }
+
+    const withoutBattery = runSimulation(pvgis, consumption)
+    const withBattery    = runSimulation(pvgis, consumption, undefined, undefined, DEFAULT_BATTERY)
+
+    expect(withBattery.summary.coveragePct).toBeGreaterThan(withoutBattery.summary.coveragePct)
+    expect(withBattery.summary.selfConsumptionPct).toBeGreaterThan(withoutBattery.summary.selfConsumptionPct)
+  })
+
+  it('battery with efficiency < 100% loses energy on round-trip', () => {
+    const battery90: BatteryConfig = { ...DEFAULT_BATTERY, roundTripEfficiencyPct: 90 }
+    // Charge 1 kWh surplus in hour 0, discharge in hour 1
+    const pvgis = makePVGIS([2000, 0])
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 2, hourlyKwh: [1, 2] }, undefined, undefined, battery90)
+    // With 90% round-trip: charge 1 kWh, store sqrt(0.9)≈0.9487; discharge ≈0.9487*sqrt(0.9)≈0.9 kWh
+    const discharge = result.hourly[1].batteryDischargeKwh ?? 0
+    expect(discharge).toBeCloseTo(0.9, 1)  // slightly less than 1 kWh charged
   })
 })
 

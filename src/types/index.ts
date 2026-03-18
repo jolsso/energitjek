@@ -48,13 +48,17 @@ export interface HourlySimulation {
   hourStart: string
   consumptionKwh: number
   productionKwh: number
-  selfConsumedKwh: number   // production used directly
-  gridExportKwh: number     // excess sent to grid
-  gridImportKwh: number     // consumption not covered by solar
+  selfConsumedKwh: number   // production used directly + battery discharge to load
+  gridExportKwh: number     // excess sent to grid (after battery charging)
+  gridImportKwh: number     // consumption not covered by solar or battery
   savedDkk: number          // total savings this hour
   spotSavedDkk: number      // avoided spot cost (self-consumed × spot incl. VAT)
   tariffSavedDkk: number    // avoided tariffs/taxes (self-consumed × tariff)
   feedInDkk: number         // revenue from grid export
+  // Battery fields (only present when battery is simulated)
+  batteryChargeKwh?: number    // energy drawn from surplus into battery
+  batteryDischargeKwh?: number // energy delivered from battery to load
+  batteryStateKwh?: number     // state of charge at end of hour
 }
 
 export interface SimulationResult {

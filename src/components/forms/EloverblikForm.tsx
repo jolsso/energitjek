@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Loader2, CheckCircle2, XCircle, ExternalLink, ShieldAlert } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
-import { fetchDataAccessToken, fetchMeteringPointId, fetchHourlyConsumption, clearTokenCache } from '@/lib/eloverblik'
+import { fetchDataAccessToken, fetchMeteringPoints, fetchHourlyData, clearTokenCache } from '@/lib/eloverblik'
 import { DATA_YEAR } from '@/lib/pvgis'
 
 const STORAGE_KEY = 'energitjek-eloverblik-token'
@@ -19,6 +19,7 @@ export function EloverblikForm() {
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [fetchedKwh, setFetchedKwh] = useState<number | null>(null)
+  const [detectedExport, setDetectedExport] = useState(false)
 
   const handleFetch = async () => {
     if (!token.trim()) return
@@ -28,15 +29,22 @@ export function EloverblikForm() {
 
     try {
       const dataToken = await fetchDataAccessToken(token.trim())
-      const meteringPointId = await fetchMeteringPointId(dataToken)
-      const { hourlyKwh, annualKwh } = await fetchHourlyConsumption(dataToken, meteringPointId, DATA_YEAR)
+      const { importId, exportId } = await fetchMeteringPoints(dataToken)
+      const { importKwh, exportKwh, annualKwh, hasExport } = await fetchHourlyData(dataToken, importId, exportId, DATA_YEAR)
 
       if (rememberToken) {
         localStorage.setItem(STORAGE_KEY, token.trim())
       }
 
-      setConsumption({ source: 'eloverblik', annualKwh, hourlyKwh })
+      setConsumption({
+        source: 'eloverblik',
+        annualKwh,
+        hourlyKwh: importKwh,
+        exportKwh: exportKwh ?? undefined,
+        hasExport,
+      })
       setFetchedKwh(Math.round(annualKwh))
+      setDetectedExport(hasExport)
       setStatus('success')
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Ukendt fejl')
@@ -50,9 +58,10 @@ export function EloverblikForm() {
     setStatus('idle')
     setErrorMsg(null)
     setFetchedKwh(null)
+    setDetectedExport(false)
     clearTokenCache()
     localStorage.removeItem(STORAGE_KEY)
-    setConsumption({ source: 'manual', hourlyKwh: undefined })
+    setConsumption({ source: 'manual', hourlyKwh: undefined, exportKwh: undefined, hasExport: false })
   }
 
   return (
@@ -135,24 +144,38 @@ export function EloverblikForm() {
       )}
 
       {status === 'success' && fetchedKwh !== null && (
-        <div className="flex items-start justify-between gap-2 rounded-md bg-green-50 border border-green-200 p-3">
-          <div className="flex items-start gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-medium text-green-800">
-                Forbrugsdata hentet ({DATA_YEAR})
+        <div className="space-y-2">
+          <div className="flex items-start justify-between gap-2 rounded-md bg-green-50 border border-green-200 p-3">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-medium text-green-800">
+                  Forbrugsdata hentet ({DATA_YEAR})
+                </p>
+                <p className="text-xs text-green-700">
+                  {fetchedKwh.toLocaleString('da-DK')} kWh · timebaseret profil
+                  {detectedExport && ' · soleksport detekteret'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleReset}
+              className="text-xs text-muted-foreground hover:text-foreground underline shrink-0"
+            >
+              Nulstil
+            </button>
+          </div>
+
+          {detectedExport && (
+            <div className="rounded-md bg-amber-50 border border-amber-200 p-2.5">
+              <p className="text-xs font-medium text-amber-800">
+                ☀️ Vi ser du eksporterer solstrøm
               </p>
-              <p className="text-xs text-green-700">
-                {fetchedKwh.toLocaleString('da-DK')} kWh · timebaseret profil
+              <p className="text-xs text-amber-700 mt-0.5">
+                Udfyld dit eksisterende anlæg nedenfor — vi beregner dit faktiske bruttoforbrug og simulerer effekten af en udvidelse.
               </p>
             </div>
-          </div>
-          <button
-            onClick={handleReset}
-            className="text-xs text-muted-foreground hover:text-foreground underline shrink-0"
-          >
-            Nulstil
-          </button>
+          )}
         </div>
       )}
     </div>

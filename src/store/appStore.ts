@@ -20,6 +20,7 @@ interface AppState {
   priceArea: PriceArea
   investmentDkk: number
   batteryConfig: BatteryConfig | null
+  existingSolarConfig: SolarConfig | null
 
   // Fetched data (not persisted — refetched as needed)
   pvgisData: PVGISData | null
@@ -34,6 +35,7 @@ interface AppState {
   setPriceArea: (area: PriceArea) => void
   setInvestmentDkk: (dkk: number) => void
   setBatteryConfig: (config: BatteryConfig | null) => void
+  setExistingSolarConfig: (config: SolarConfig | null) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
   reset: () => void
@@ -62,6 +64,7 @@ export const useAppStore = create<AppState>()(
       priceArea: 'DK2',
       investmentDkk: 0,
       batteryConfig: null,
+      existingSolarConfig: null,
       pvgisData: null,
       simulationResult: null,
 
@@ -75,6 +78,7 @@ export const useAppStore = create<AppState>()(
       setPriceArea: (priceArea) => set({ priceArea }),
       setInvestmentDkk: (investmentDkk) => set({ investmentDkk }),
       setBatteryConfig: (batteryConfig) => set({ batteryConfig }),
+      setExistingSolarConfig: (existingSolarConfig) => set({ existingSolarConfig }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
       reset: () =>
@@ -87,6 +91,7 @@ export const useAppStore = create<AppState>()(
           priceArea: 'DK2',
           investmentDkk: 0,
           batteryConfig: null,
+          existingSolarConfig: null,
           pvgisData: null,
           simulationResult: null,
         }),
@@ -101,6 +106,7 @@ export const useAppStore = create<AppState>()(
         priceArea: s.priceArea,
         investmentDkk: s.investmentDkk,
         batteryConfig: s.batteryConfig,
+        existingSolarConfig: s.existingSolarConfig,
         consumption: {
           source: s.consumption.source,
           annualKwh: s.consumption.annualKwh,

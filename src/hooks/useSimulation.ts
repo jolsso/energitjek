@@ -4,7 +4,7 @@ import { fetchPVGISData, DATA_YEAR } from '@/lib/pvgis'
 import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER } from '@/lib/energidataservice'
 import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK } from '@/lib/gridtariff'
 import { runSimulation } from '@/lib/simulation'
-import type { HourlyPrice } from '@/types'
+import type { ConsumptionData, HourlyPrice } from '@/types'
 
 export function useSimulation() {
   const [isLoading, setIsLoading] = useState(false)
@@ -17,6 +17,7 @@ export function useSimulation() {
     consumption,
     priceArea,
     batteryConfig,
+    existingSolarConfig,
     setPVGISData,
     setSimulationResult,
   } = useAppStore()
@@ -31,11 +32,14 @@ export function useSimulation() {
     setError(null)
 
     try {
-      // Fetch PVGIS, spot prices, and grid tariff in parallel
       const dso = dsoFromPostcode(postcode)
 
-      const [pvgis, rawPrices, tariff24, co2Factors] = await Promise.all([
+      const [pvgis, pvgisExisting, rawPrices, tariff24, co2Factors] = await Promise.all([
         fetchPVGISData(coordinates, solarConfig),
+        // Fetch existing system PVGIS in parallel when user has solar already installed
+        existingSolarConfig && consumption.hasExport
+          ? fetchPVGISData(coordinates, existingSolarConfig)
+          : Promise.resolve(null),
         fetchSpotPrices(DATA_YEAR, priceArea).catch((err) => {
           console.warn('Spotpriser ikke tilgængelige — bruger faste priser.', err)
           return null
@@ -59,13 +63,40 @@ export function useSimulation() {
         prices = rawPrices.map((p, i) => ({
           ...p,
           tariffDkk: tariff24
-            ? // Hourly nettarif + elafgift + system tariff, all incl. VAT
-              (tariff24[i % 24] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
-            : p.tariffDkk, // fallback: flat 1.40 from energidataservice.ts
+            ? (tariff24[i % 24] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
+            : p.tariffDkk,
         }))
       }
 
-      const result = runSimulation(pvgis, consumption, prices, co2Factors ?? undefined, batteryConfig ?? undefined)
+      // Reconstruct gross consumption when the user has existing solar installed.
+      // Eloverblik import/export already reflects the existing system, so we need to
+      // add back the existing production and subtract the exported surplus:
+      //   gross[h] = import[h] + pvgisExisting[h] - export[h]
+      let effectiveConsumption: ConsumptionData = consumption
+      if (
+        existingSolarConfig &&
+        consumption.hasExport &&
+        consumption.hourlyKwh &&
+        consumption.exportKwh &&
+        pvgisExisting
+      ) {
+        const importKwh = consumption.hourlyKwh
+        const exportKwh = consumption.exportKwh
+        const existingHourly = pvgisExisting.hourly.map((e) => e.P / 1000)  // W → kWh
+
+        const grossHourly = importKwh.map((imp, i) =>
+          Math.max(0, imp + (existingHourly[i] ?? 0) - (exportKwh[i] ?? 0)),
+        )
+        const grossAnnual = grossHourly.reduce((s, v) => s + v, 0)
+
+        effectiveConsumption = {
+          source: 'eloverblik',
+          annualKwh: grossAnnual,
+          hourlyKwh: grossHourly,
+        }
+      }
+
+      const result = runSimulation(pvgis, effectiveConsumption, prices, co2Factors ?? undefined, batteryConfig ?? undefined)
       setSimulationResult(result)
       return true
     } catch (e) {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { parseConsumptionResponse, fetchDataAccessToken, fetchMeteringPointId, clearTokenCache } from './eloverblik'
+import { parseConsumptionResponse, fetchDataAccessToken, fetchMeteringPointId, fetchMeteringPoints, clearTokenCache } from './eloverblik'
 
 // --- parseConsumptionResponse ---
 
@@ -130,7 +130,7 @@ describe('fetchMeteringPointId', () => {
   it('returns first metering point ID', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ result: [{ meteringPointId: '571313174000012345' }] }),
+      json: async () => ({ result: [{ meteringPointId: '571313174000012345', typeOfMP: 'E17' }] }),
     }))
 
     const id = await fetchMeteringPointId('data-token')
@@ -144,5 +144,49 @@ describe('fetchMeteringPointId', () => {
     }))
 
     await expect(fetchMeteringPointId('data-token')).rejects.toThrow('Ingen målepunkter')
+  })
+})
+
+// --- fetchMeteringPoints ---
+
+describe('fetchMeteringPoints', () => {
+  beforeEach(() => vi.restoreAllMocks())
+
+  it('returns importId and null exportId when only E17 present', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ result: [{ meteringPointId: '111', typeOfMP: 'E17' }] }),
+    }))
+
+    const { importId, exportId } = await fetchMeteringPoints('data-token')
+    expect(importId).toBe('111')
+    expect(exportId).toBeNull()
+  })
+
+  it('returns both importId and exportId when E17 and E18 present', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: [
+          { meteringPointId: '111', typeOfMP: 'E17' },
+          { meteringPointId: '222', typeOfMP: 'E18' },
+        ],
+      }),
+    }))
+
+    const { importId, exportId } = await fetchMeteringPoints('data-token')
+    expect(importId).toBe('111')
+    expect(exportId).toBe('222')
+  })
+
+  it('falls back to first entry when typeOfMP is missing', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ result: [{ meteringPointId: '999' }] }),
+    }))
+
+    const { importId, exportId } = await fetchMeteringPoints('data-token')
+    expect(importId).toBe('999')
+    expect(exportId).toBeNull()
   })
 })

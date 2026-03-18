@@ -124,14 +124,14 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
   )
 }
 
-export function SolarConfigForm() {
+export function SolarConfigForm({ label }: { label?: string }) {
   const { solarConfig, setSolarConfig } = useAppStore()
 
   return (
     <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-5">
       <h2 className="font-semibold flex items-center gap-2">
         <Sun className="h-4 w-4 text-primary" />
-        Solcelleanlæg
+        {label ?? 'Solcelleanlæg'}
       </h2>
 
       <SliderField

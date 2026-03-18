@@ -20,6 +20,9 @@ export interface ConsumptionData {
   annualKwh: number
   // Hourly profile indexed by hour-of-year (0–8759), kWh per hour
   hourlyKwh?: number[]
+  // Set when user has existing solar — hourly grid export kWh from Eloverblik
+  exportKwh?: number[]
+  hasExport?: boolean
 }
 
 // --- PVGIS response ---

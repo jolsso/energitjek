@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/eloverblik/:path+", "destination": "/api/eloverblik/[...path]" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

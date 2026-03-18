@@ -4,7 +4,7 @@ interface Props {
   children: React.ReactNode
 }
 
-export function ComingSoon({ phase, title, children }: Props) {
+export function ComingSoon({ phase, children }: Props) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">

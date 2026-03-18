@@ -21,7 +21,7 @@ const SERVICES = [
     domain: 're.jrc.ec.europa.eu',
     sends: 'Koordinater + anlægsdata',
     receives: 'Timebaseret solproduktion',
-    note: 'Anmodningen går via vores server-proxy for at omgå browser-CORS-begrænsninger.',
+    note: 'Anmodningen går via en Vercel-proxy-funktion for at omgå browser-CORS-begrænsninger.',
     optional: false,
     via: 'proxy',
   },
@@ -41,7 +41,7 @@ const SERVICES = [
     domain: 'api.eloverblik.dk',
     sends: 'Dit API-token',
     receives: 'Timebaseret forbrug (kWh)',
-    note: 'Kun aktivt hvis du indtaster et token. Anmodningen går via vores server-proxy. Forbrugsdata gemmes aldrig uden for din browser.',
+    note: 'Kun aktivt hvis du indtaster et token. Anmodningen går via en Vercel-proxy-funktion — tokenet logges ikke. Forbrugsdata gemmes aldrig uden for din browser.',
     optional: true,
     via: 'proxy',
   },
@@ -87,14 +87,14 @@ export function PrivacyPage({ onBack }: Props) {
           Privatliv & datasikkerhed
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed">
-          Er du sunshine? er bygget på et enkelt princip: al beregning sker i din browser, og dine data forlader aldrig vores servere. Nedenfor kan du se præcist, hvilke eksterne tjenester din browser taler med — og hvad der sendes.
+          Er du sunshine? er bygget på et enkelt princip: al beregning sker i din browser. Sitet hostes på Vercel og bruger to proxy-funktioner til at videresende API-kald — ingen data behandles eller gemmes på serversiden. Nedenfor kan du se præcist, hvilke eksterne tjenester din browser taler med — og hvad der sendes.
         </p>
       </div>
 
       {/* Key points */}
       <div className="grid sm:grid-cols-3 gap-4">
         {[
-          { icon: ShieldCheck, title: 'Ingen server-behandling', body: 'Beregningerne kører 100 % i din browser. Vores server fungerer udelukkende som proxy for tredjepartsAPIer.' },
+          { icon: ShieldCheck, title: 'Ingen server-behandling', body: 'Beregningerne kører 100 % i din browser. Vercel-hostingen bruges kun til at serve sitet og som proxy for to tredjepartsAPIer.' },
           { icon: Database, title: 'Minimal localStorage', body: 'Kun konfiguration (adresse, anlæg, priszone) gemmes lokalt i din browser. Forbrugsdata gemmes aldrig.' },
           { icon: Eye, title: 'Ingen tracking', body: 'Ingen cookies. Vercel Analytics indsamler kun anonyme sidevisninger — ingen IP-adresser, ingen fingerprinting.' },
         ].map(({ icon: Icon, title, body }) => (

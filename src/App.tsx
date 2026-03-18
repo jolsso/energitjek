@@ -9,11 +9,12 @@ import { AddressMap } from '@/components/map/AddressMap'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
 import { ComingSoon } from '@/components/ComingSoon'
+import { PrivacyPage } from '@/components/PrivacyPage'
 import { useSimulation } from '@/hooks/useSimulation'
 import { useAppStore } from '@/store/appStore'
 
 export default function App() {
-  const [step, setStep] = useState<'input' | 'results'>('input')
+  const [step, setStep] = useState<'input' | 'results' | 'privacy'>('input')
   const { runSimulation, isLoading, error } = useSimulation()
   const reset = useAppStore((s) => s.reset)
   const solarConfig = useAppStore((s) => s.solarConfig)
@@ -43,9 +44,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onPrivacy={() => setStep('privacy')} />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {step === 'input' ? (
+        {step === 'privacy' ? (
+          <PrivacyPage onBack={() => setStep('input')} />
+        ) : step === 'input' ? (
           <div className="space-y-8">
             <div className="text-center space-y-3 mb-10">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground card-shadow mb-2">

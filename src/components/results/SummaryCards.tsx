@@ -35,7 +35,7 @@ export function SummaryCards({ summary, investmentDkk = 0 }: Props) {
       icon: TrendingDown,
       label: 'Estimeret besparelse',
       value: formatDkk(summary.annualSavedDkk),
-      sub: 'Pr. år (ekskl. feed-in)',
+      sub: 'Pr. år (inkl. salg til net)',
     },
     {
       icon: Leaf,

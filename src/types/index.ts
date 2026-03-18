@@ -51,7 +51,10 @@ export interface HourlySimulation {
   selfConsumedKwh: number   // production used directly
   gridExportKwh: number     // excess sent to grid
   gridImportKwh: number     // consumption not covered by solar
-  savedDkk: number          // cost savings this hour
+  savedDkk: number          // total savings this hour
+  spotSavedDkk: number      // avoided spot cost (self-consumed × spot incl. VAT)
+  tariffSavedDkk: number    // avoided tariffs/taxes (self-consumed × tariff)
+  feedInDkk: number         // revenue from grid export
 }
 
 export interface SimulationResult {

@@ -1,21 +1,18 @@
 const UPSTREAM = 'https://re.jrc.ec.europa.eu/api/v5_3'
 
-export default async function handler(req, res) {
-  const pathSegments = [req.query.path].flat().filter(Boolean)
-  const upstreamPath = pathSegments.join('/')
-  const search = new URL(req.url, 'http://localhost').search
-  const url = `${UPSTREAM}/${upstreamPath}${search}`
+export default {
+  async fetch(request) {
+    const url = new URL(request.url)
+    const path = url.pathname.replace(/^\/api\/pvgis\/?/, '')
+    const upstreamUrl = `${UPSTREAM}/${path}${url.search}`
 
-  const upstreamRes = await fetch(url, {
-    headers: { Host: 're.jrc.ec.europa.eu' },
-  })
+    const upstreamRes = await fetch(upstreamUrl)
 
-  const body = await upstreamRes.text()
+    const headers = new Headers(upstreamRes.headers)
+    headers.delete('content-encoding')
+    headers.delete('transfer-encoding')
 
-  for (const [key, value] of upstreamRes.headers.entries()) {
-    if (['content-encoding', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) continue
-    res.setHeader(key, value)
-  }
-
-  res.status(upstreamRes.status).send(body)
+    const body = await upstreamRes.text()
+    return new Response(body, { status: upstreamRes.status, headers })
+  },
 }

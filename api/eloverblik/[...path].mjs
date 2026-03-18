@@ -1,29 +1,25 @@
 const UPSTREAM = 'https://api.eloverblik.dk/customerapi'
 
-export default async function handler(req, res) {
-  const pathSegments = [req.query.path].flat().filter(Boolean)
-  const upstreamPath = pathSegments.join('/')
-  const search = new URL(req.url, 'http://localhost').search
-  const url = `${UPSTREAM}/${upstreamPath}${search}`
+export default {
+  async fetch(request) {
+    const url = new URL(request.url)
+    const path = url.pathname.replace(/^\/api\/eloverblik\/?/, '')
+    const upstreamUrl = `${UPSTREAM}/${path}${url.search}`
 
-  const headers = {}
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (key.toLowerCase() === 'host') continue
-    headers[key] = Array.isArray(value) ? value.join(', ') : value
-  }
+    const headers = new Headers(request.headers)
+    headers.delete('host')
 
-  const upstreamRes = await fetch(url, {
-    method: req.method,
-    headers,
-    body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
-  })
+    const upstreamRes = await fetch(upstreamUrl, {
+      method: request.method,
+      headers,
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+    })
 
-  const body = await upstreamRes.text()
+    const resHeaders = new Headers(upstreamRes.headers)
+    resHeaders.delete('content-encoding')
+    resHeaders.delete('transfer-encoding')
 
-  for (const [key, value] of upstreamRes.headers.entries()) {
-    if (['content-encoding', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) continue
-    res.setHeader(key, value)
-  }
-
-  res.status(upstreamRes.status).send(body)
+    const body = await upstreamRes.text()
+    return new Response(body, { status: upstreamRes.status, headers: resHeaders })
+  },
 }

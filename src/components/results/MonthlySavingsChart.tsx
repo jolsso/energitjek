@@ -61,7 +61,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
       <p className="font-semibold text-sm">{label}</p>
       <div className="space-y-1">
         <Row color={COLORS.spot}   label="Undgået energiomk."  value={fmt(spot)} />
-        <Row color={COLORS.tariff} label="Undgået afgifter"     value={fmt(tariff)} />
+        <Row color={COLORS.tariff} label="Undgået afgifter & moms" value={fmt(tariff)} />
         <Row color={COLORS.feedIn} label="Salg til net"         value={fmt(feedIn)} />
       </div>
       <div className="border-t border-border pt-1.5 flex justify-between font-medium">
@@ -106,7 +106,7 @@ export function MonthlySavingsChart({ hourly }: Props) {
             formatter={(value: string) => {
               const labels: Record<string, string> = {
                 spot:   'Undgået energiomk.',
-                tariff: 'Undgået afgifter',
+                tariff: 'Undgået afgifter & moms',
                 feedIn: 'Salg til net',
               }
               return labels[value] ?? value

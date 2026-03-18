@@ -12,3 +12,9 @@ dist
 /playwright/.auth/
 
 .vercel
+
+# Claude Code
+.claude/
+
+# TypeScript build cache
+tsconfig.*.tsbuildinfo

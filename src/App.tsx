@@ -23,6 +23,7 @@ export default function App() {
 
   // Always keep ref up-to-date so debounced callback never goes stale
   const runSimulationRef = useRef(runSimulation)
+  // eslint-disable-next-line react-hooks/refs
   runSimulationRef.current = runSimulation
 
   const handleCalculate = async () => {

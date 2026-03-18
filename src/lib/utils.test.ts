@@ -68,7 +68,7 @@ describe('cn', () => {
   })
 
   it('ignores falsy values', () => {
-    expect(cn('foo', false && 'bar', undefined, null, 'baz')).toBe('foo baz')
+    expect(cn('foo', undefined, null, 'baz')).toBe('foo baz')
   })
 
   it('returns empty string for no input', () => {

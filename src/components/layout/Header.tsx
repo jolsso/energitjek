@@ -1,4 +1,4 @@
-import { Zap, ShieldCheck } from 'lucide-react'
+import { Zap, ShieldCheck, Github } from 'lucide-react'
 
 interface Props {
   onPrivacy: () => void
@@ -19,13 +19,24 @@ export function Header({ onPrivacy }: Props) {
             </span>
           )}
         </div>
-        <button
-          onClick={onPrivacy}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ShieldCheck className="h-3.5 w-3.5" />
-          Privatliv
-        </button>
+        <div className="flex items-center gap-3">
+          <a
+            href="https://github.com/jolsso/energitjek"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="GitHub"
+          >
+            <Github className="h-4 w-4" />
+          </a>
+          <button
+            onClick={onPrivacy}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Privatliv
+          </button>
+        </div>
       </div>
     </header>
   )

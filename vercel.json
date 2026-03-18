@@ -5,11 +5,7 @@
       "destination": "https://re.jrc.ec.europa.eu/api/v5_3/:path*"
     },
     {
-      "source": "/api/eloverblik/:path*",
-      "destination": "https://api.eloverblik.dk/customerapi/:path*"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

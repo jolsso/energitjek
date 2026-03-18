@@ -107,6 +107,19 @@ describe('runSimulation — consumption profiles', () => {
     })
   })
 
+  it('pads with flat prices when price array is shorter than simulation hours', () => {
+    // 3 hours of PVGIS data, only 1 price entry provided
+    const pvgis = makePVGIS([1000, 1000, 1000])
+    const prices: HourlyPrice[] = [
+      { hourStart: '2024-01-01T00:00:00', spotEur: 0, tariffDkk: 2.00 },
+    ]
+    // Should not throw — hours 1 and 2 fall back to flat prices (3.0 DKK/kWh)
+    const result = runSimulation(pvgis, { source: 'manual', annualKwh: 3, hourlyKwh: [1, 1, 1] }, prices)
+    expect(result.hourly[0].savedDkk).toBeCloseTo(2.00)  // uses provided tariff
+    expect(result.hourly[1].savedDkk).toBeCloseTo(3.00)  // falls back to flat 0.80 + 2.20
+    expect(result.hourly[2].savedDkk).toBeCloseTo(3.00)
+  })
+
   it('falls back to weekly profile when hourly length mismatches', () => {
     const pvgis = makePVGIS([0, 0, 0])
     // hourlyKwh has 2 entries but pvgis has 3 hours — should ignore and use weekly profile

@@ -179,16 +179,18 @@ interface HourlyPrices {
   tariff: number   // fixed tariff DKK/kWh
 }
 
+const FLAT_PRICES: HourlyPrices = {
+  retail: FLAT_SPOT_DKK + FLAT_TARIFF_DKK,
+  feedIn: FLAT_FEED_IN_PRICE_DKK,
+  spot:   FLAT_SPOT_DKK,
+  tariff: FLAT_TARIFF_DKK,
+}
+
 function buildPriceProfile(prices: HourlyPrice[] | undefined, n: number): HourlyPrices[] {
   if (!prices || prices.length === 0) {
-    return Array(n).fill({
-      retail: FLAT_SPOT_DKK + FLAT_TARIFF_DKK,
-      feedIn: FLAT_FEED_IN_PRICE_DKK,
-      spot: FLAT_SPOT_DKK,
-      tariff: FLAT_TARIFF_DKK,
-    })
+    return Array(n).fill(FLAT_PRICES)
   }
-  return prices.slice(0, n).map(p => {
+  const mapped = prices.slice(0, n).map(p => {
     const spotDkk = (p.spotEur / 1000) * EUR_TO_DKK  // EUR/MWh → DKK/kWh
     const spot = spotDkk * VAT_MULTIPLIER
     const tariff = p.tariffDkk
@@ -196,6 +198,11 @@ function buildPriceProfile(prices: HourlyPrice[] | undefined, n: number): Hourly
     const feedIn = spotDkk * FEED_IN_MULTIPLIER
     return { retail, feedIn, spot, tariff }
   })
+  // Pad with flat prices if the provided array is shorter than the simulation period
+  if (mapped.length < n) {
+    return [...mapped, ...Array(n - mapped.length).fill(FLAT_PRICES)]
+  }
+  return mapped
 }
 
 function computeSummary(hourly: HourlySimulation[], annualConsumptionKwh: number, co2Factors?: number[]): SimulationSummary {

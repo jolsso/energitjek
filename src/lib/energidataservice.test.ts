@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { EUR_TO_DKK, VAT_MULTIPLIER, FEED_IN_MULTIPLIER, fetchSpotPrices } from './energidataservice'
+import { EUR_TO_DKK, VAT_MULTIPLIER, FEED_IN_MULTIPLIER, fetchSpotPrices, fetchCO2Emissions } from './energidataservice'
 
 describe('EUR_TO_DKK', () => {
   it('is a positive number close to the DKK/EUR peg', () => {
@@ -51,6 +51,14 @@ describe('fetchSpotPrices', () => {
     await expect(fetchSpotPrices(2024, 'DK1')).rejects.toThrow('503')
   })
 
+  it('throws when records array is missing from response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ /* no records key */ }),
+    }))
+    await expect(fetchSpotPrices(2024, 'DK2')).rejects.toThrow()
+  })
+
   it('includes correct year range in request URL', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -64,5 +72,68 @@ describe('fetchSpotPrices', () => {
     // URLSearchParams encodes colons, so T00:00 → T00%3A00
     expect(calledUrl).toContain('2023-01-01T00%3A00')
     expect(calledUrl).toContain('2024-01-01T00%3A00')
+  })
+})
+
+describe('fetchCO2Emissions', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('maps records to kg/kWh (divides g/kWh by 1000)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        records: [
+          { CO2Emission: 130 },  // 130 g/kWh → 0.130 kg/kWh
+          { CO2Emission: 50 },   // 50 g/kWh  → 0.050 kg/kWh
+        ],
+      }),
+    }))
+
+    const factors = await fetchCO2Emissions(2024, 'DK2')
+
+    expect(factors).toHaveLength(2)
+    expect(factors[0]).toBeCloseTo(0.130)
+    expect(factors[1]).toBeCloseTo(0.050)
+  })
+
+  it('falls back to 130 g/kWh when CO2Emission is null', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ records: [{ CO2Emission: null }] }),
+    }))
+
+    const factors = await fetchCO2Emissions(2024, 'DK2')
+
+    expect(factors[0]).toBeCloseTo(0.130)  // 130 / 1000
+  })
+
+  it('throws on non-ok HTTP response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }))
+    await expect(fetchCO2Emissions(2024, 'DK1')).rejects.toThrow('500')
+  })
+
+  it('throws when records array is missing from response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ /* no records key */ }),
+    }))
+    await expect(fetchCO2Emissions(2024, 'DK2')).rejects.toThrow()
+  })
+
+  it('includes correct year range and price area in URL', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ records: [] }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    await fetchCO2Emissions(2023, 'DK1')
+
+    const calledUrl: string = mockFetch.mock.calls[0][0]
+    expect(calledUrl).toContain('2023-01-01T00%3A00')
+    expect(calledUrl).toContain('2024-01-01T00%3A00')
+    expect(calledUrl).toContain('DK1')
   })
 })

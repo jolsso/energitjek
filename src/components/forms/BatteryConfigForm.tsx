@@ -60,7 +60,7 @@ export function BatteryConfigForm() {
             <input
               type="range"
               min={1}
-              max={30}
+              max={50}
               value={config.capacityKwh}
               onChange={(e) => update({ capacityKwh: Number(e.target.value) })}
               className="w-full accent-primary"

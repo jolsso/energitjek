@@ -111,20 +111,25 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 items-start">
-              {/* Sticky left sidebar — solar config + investment + map */}
+              {/* Sticky left sidebar — map + solar config + investment */}
               <div className="space-y-4 lg:sticky lg:top-20">
+                {coordinates && (
+                  <div className="rounded-xl border border-border bg-card card-shadow overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border">
+                      <p className="text-sm font-medium truncate">{address}</p>
+                    </div>
+                    <AddressMap
+                      coordinates={coordinates}
+                      displayName={address}
+                      azimuthDeg={solarConfig.azimuthDeg}
+                    />
+                  </div>
+                )}
                 <SolarConfigForm />
                 <InvestmentForm />
                 <ComingSoon phase="Phase 4" title="Batterisimulering">
                   <BatteryConfigForm />
                 </ComingSoon>
-                {coordinates && (
-                  <AddressMap
-                    coordinates={coordinates}
-                    displayName={address}
-                    azimuthDeg={solarConfig.azimuthDeg}
-                  />
-                )}
               </div>
 
               {/* Results */}

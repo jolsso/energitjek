@@ -19,6 +19,7 @@ type InputMode = 'eloverblik' | 'manual'
 export default function App() {
   const [step, setStep] = useState<'input' | 'results' | 'privacy'>('input')
   const [inputMode, setInputMode] = useState<InputMode>('eloverblik')
+  const [advanced, setAdvanced] = useState(false)
   const { runSimulation, isLoading, error } = useSimulation()
   const reset = useAppStore((s) => s.reset)
   const solarConfig = useAppStore((s) => s.solarConfig)
@@ -175,10 +176,34 @@ export default function App() {
                     />
                   </div>
                 )}
+
+                {/* Standard / Avanceret toggle */}
+                <div className="flex rounded-lg border border-border bg-muted p-0.5 text-sm">
+                  <button
+                    onClick={() => setAdvanced(false)}
+                    className={`flex-1 rounded-md py-1.5 font-medium transition-colors ${
+                      !advanced ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Standard
+                  </button>
+                  <button
+                    onClick={() => setAdvanced(true)}
+                    className={`flex-1 rounded-md py-1.5 font-medium transition-colors ${
+                      advanced ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Avanceret
+                  </button>
+                </div>
+
                 {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm />}
-                <SolarConfigForm label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined} />
+                <SolarConfigForm
+                  label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
+                  advanced={advanced}
+                />
                 <InvestmentForm />
-                <BatteryConfigForm />
+                <BatteryConfigForm advanced={advanced} />
               </div>
 
               {/* Results */}

@@ -175,7 +175,7 @@ export function EloverblikSetupForm() {
             {summary.hasExport && (
               <div className="flex items-center gap-2 text-sm text-amber-700 border-t border-green-200 pt-2 mt-1">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-600" />
-                <span>Soleksport registreret — angiv dit eksisterende anlæg nedenfor</span>
+                <span>Soleksport registreret — angiv dit eksisterende anlæg på næste trin</span>
               </div>
             )}
           </div>

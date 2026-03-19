@@ -205,9 +205,9 @@ export default function App() {
                   advanced={advanced}
                 />
                 <InvestmentForm />
+                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <ConsumptionAddonsForm />
                 <BatteryConfigForm advanced={advanced} />
-                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
               </div>
 
               {/* Results */}

@@ -119,7 +119,7 @@ export default function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 items-start">
               {/* Sticky left sidebar — map + solar config + investment */}
-              <div className="space-y-4 lg:sticky lg:top-20">
+              <div className="space-y-4 lg:sticky lg:top-20 order-2 lg:order-1">
                 {coordinates && (
                   <div className="rounded-xl border border-border bg-card card-shadow overflow-hidden">
                     <div className="px-4 py-3 border-b border-border">
@@ -139,7 +139,7 @@ export default function App() {
               </div>
 
               {/* Results */}
-              <div className="min-w-0">
+              <div className="min-w-0 order-1 lg:order-2">
                 <ResultsPanel />
               </div>
             </div>

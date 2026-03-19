@@ -1,12 +1,31 @@
 import { useState } from 'react'
-import { Loader2, CheckCircle2, XCircle, ExternalLink, ShieldAlert } from 'lucide-react'
+import { Loader2, CheckCircle2, XCircle, ExternalLink, ShieldAlert, MapPin } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
-import { fetchDataAccessToken, fetchMeteringPoints, fetchHourlyData, clearTokenCache } from '@/lib/eloverblik'
+import {
+  fetchDataAccessToken,
+  fetchAllMeteringPoints,
+  findExportPoint,
+  fetchHourlyData,
+  clearTokenCache,
+  type MeteringPoint,
+} from '@/lib/eloverblik'
 import { DATA_YEAR } from '@/lib/pvgis'
 
 const STORAGE_KEY = 'energitjek-eloverblik-token'
 
-type Status = 'idle' | 'loading' | 'success' | 'error'
+type Status = 'idle' | 'loading' | 'selecting' | 'fetching' | 'success' | 'error'
+
+function addressLabel(p: MeteringPoint): string {
+  const parts = [
+    p.streetName && p.buildingNumber
+      ? `${p.streetName} ${p.buildingNumber}`
+      : p.streetName ?? '',
+    p.postcode && p.cityName
+      ? `${p.postcode} ${p.cityName}`
+      : p.cityName ?? p.postcode ?? '',
+  ].filter(Boolean)
+  return parts.join(', ') || p.meteringPointId
+}
 
 export function EloverblikForm() {
   const { setConsumption } = useAppStore()
@@ -21,6 +40,11 @@ export function EloverblikForm() {
   const [fetchedKwh, setFetchedKwh] = useState<number | null>(null)
   const [detectedExport, setDetectedExport] = useState(false)
 
+  // Address selection state
+  const [allPoints, setAllPoints] = useState<MeteringPoint[]>([])
+  const [importPoints, setImportPoints] = useState<MeteringPoint[]>([])
+  const [dataToken, setDataToken] = useState<string | null>(null)
+
   const handleFetch = async () => {
     if (!token.trim()) return
     setStatus('loading')
@@ -28,28 +52,59 @@ export function EloverblikForm() {
     clearTokenCache()
 
     try {
-      const dataToken = await fetchDataAccessToken(token.trim())
-      const { importId, exportId } = await fetchMeteringPoints(dataToken)
-      const { importKwh, exportKwh, annualKwh, hasExport } = await fetchHourlyData(dataToken, importId, exportId, DATA_YEAR)
+      const dt = await fetchDataAccessToken(token.trim())
+      const points = await fetchAllMeteringPoints(dt)
 
-      if (rememberToken) {
-        localStorage.setItem(STORAGE_KEY, token.trim())
+      const e17s = points.filter((p) => p.typeOfMP === 'E17')
+      if (!e17s.length) throw new Error('Ingen forbrugsmålepunkter (E17) fundet.')
+
+      if (e17s.length === 1) {
+        // Only one address — fetch immediately
+        await doFetchData(dt, points, e17s[0].meteringPointId)
+      } else {
+        // Multiple addresses — let user pick
+        setDataToken(dt)
+        setAllPoints(points)
+        setImportPoints(e17s)
+        setStatus('selecting')
+        if (rememberToken) localStorage.setItem(STORAGE_KEY, token.trim())
       }
-
-      setConsumption({
-        source: 'eloverblik',
-        annualKwh,
-        hourlyKwh: importKwh,
-        exportKwh: exportKwh ?? undefined,
-        hasExport,
-      })
-      setFetchedKwh(Math.round(annualKwh))
-      setDetectedExport(hasExport)
-      setStatus('success')
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Ukendt fejl')
       setStatus('error')
     }
+  }
+
+  const handleSelectAddress = async (importId: string) => {
+    if (!dataToken) return
+    setStatus('fetching')
+    setErrorMsg(null)
+    try {
+      await doFetchData(dataToken, allPoints, importId)
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : 'Ukendt fejl')
+      setStatus('error')
+    }
+  }
+
+  const doFetchData = async (dt: string, points: MeteringPoint[], importId: string) => {
+    const exportPoint = findExportPoint(points, importId)
+    const exportId = exportPoint?.meteringPointId ?? null
+
+    const { importKwh, exportKwh, annualKwh, hasExport } = await fetchHourlyData(dt, importId, exportId, DATA_YEAR)
+
+    if (rememberToken) localStorage.setItem(STORAGE_KEY, token.trim())
+
+    setConsumption({
+      source: 'eloverblik',
+      annualKwh,
+      hourlyKwh: importKwh,
+      exportKwh: exportKwh ?? undefined,
+      hasExport,
+    })
+    setFetchedKwh(Math.round(annualKwh))
+    setDetectedExport(hasExport)
+    setStatus('success')
   }
 
   const handleReset = () => {
@@ -59,6 +114,9 @@ export function EloverblikForm() {
     setErrorMsg(null)
     setFetchedKwh(null)
     setDetectedExport(false)
+    setAllPoints([])
+    setImportPoints([])
+    setDataToken(null)
     clearTokenCache()
     localStorage.removeItem(STORAGE_KEY)
     setConsumption({ source: 'manual', hourlyKwh: undefined, exportKwh: undefined, hasExport: false })
@@ -78,7 +136,34 @@ export function EloverblikForm() {
         </a>
       </div>
 
-      {status !== 'success' && (
+      {status === 'selecting' && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium">
+            Vi fandt {importPoints.length} adresser på din konto — vælg den du vil beregne for:
+          </p>
+          {importPoints.map((p) => (
+            <button
+              key={p.meteringPointId}
+              onClick={() => handleSelectAddress(p.meteringPointId)}
+              className="w-full flex items-start gap-2.5 rounded-lg border border-border bg-card p-3 text-left hover:bg-muted transition-colors"
+            >
+              <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium leading-tight">{addressLabel(p)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{p.meteringPointId}</p>
+              </div>
+            </button>
+          ))}
+          <button
+            onClick={handleReset}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Annullér
+          </button>
+        </div>
+      )}
+
+      {status !== 'success' && status !== 'selecting' && (
         <>
           <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
             <li>Log ind på eloverblik.dk med MitID</li>
@@ -100,10 +185,10 @@ export function EloverblikForm() {
             />
             <button
               onClick={handleFetch}
-              disabled={status === 'loading' || !token.trim()}
+              disabled={status === 'loading' || status === 'fetching' || !token.trim()}
               className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
             >
-              {status === 'loading'
+              {status === 'loading' || status === 'fetching'
                 ? <Loader2 className="h-4 w-4 animate-spin" />
                 : 'Hent data'}
             </button>

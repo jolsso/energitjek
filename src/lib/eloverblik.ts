@@ -32,33 +32,86 @@ export function clearTokenCache(): void {
   _cachedToken = null
 }
 
-/**
- * Returns the first metering point ID accessible with the given data access token.
- * @deprecated Use fetchMeteringPoints for new code.
- */
-export async function fetchMeteringPointId(dataToken: string): Promise<string> {
-  const { importId } = await fetchMeteringPoints(dataToken)
-  return importId
+export interface MeteringPoint {
+  meteringPointId: string
+  typeOfMP: string
+  streetName?: string
+  buildingNumber?: string
+  postcode?: string
+  cityName?: string
+  parentMeteringPointId?: string
 }
 
 /**
- * Returns import (E17) and export (E18) metering point IDs.
- * exportId is null if no solar export meter is found.
+ * Returns all metering points accessible with the given data access token,
+ * including address details for display in a selection UI.
  */
-export async function fetchMeteringPoints(
-  dataToken: string,
-): Promise<{ importId: string; exportId: string | null }> {
+export async function fetchAllMeteringPoints(dataToken: string): Promise<MeteringPoint[]> {
   const res = await fetch(`${BASE}/api/meteringpoints/meteringpoints?includeAll=false`, {
     headers: { Authorization: `Bearer ${dataToken}` },
   })
   if (!res.ok) throw new Error(`Målepunkter kunne ikke hentes: ${res.status}`)
 
   const data = await res.json()
-  const points: { meteringPointId: string; typeOfMP?: string }[] = data.result ?? []
-  if (!points.length) throw new Error('Ingen målepunkter fundet. Kontrollér at tokenet har adgang til forbrugsdata.')
+  const raw: Record<string, unknown>[] = data.result ?? []
+  if (!raw.length) throw new Error('Ingen målepunkter fundet. Kontrollér at tokenet har adgang til forbrugsdata.')
 
+  return raw.map((p) => ({
+    meteringPointId: p['meteringPointId'] as string,
+    typeOfMP: (p['typeOfMP'] as string) ?? '',
+    streetName: p['streetName'] as string | undefined,
+    buildingNumber: p['buildingNumber'] as string | undefined,
+    postcode: p['postcode'] as string | undefined,
+    cityName: p['cityName'] as string | undefined,
+    parentMeteringPointId: (p['parentMeteringPoint'] as Record<string, string> | undefined)?.meteringPointId,
+  }))
+}
+
+/**
+ * Given all metering points and a selected E17 import meter,
+ * finds the associated E18 export meter (by parentMeteringPoint or matching postcode).
+ */
+export function findExportPoint(points: MeteringPoint[], importId: string): MeteringPoint | null {
+  const importPoint = points.find((p) => p.meteringPointId === importId)
+  if (!importPoint) return null
+
+  // Prefer E18 that explicitly references this E17 as parent
+  const byParent = points.find(
+    (p) => p.typeOfMP === 'E18' && p.parentMeteringPointId === importId,
+  )
+  if (byParent) return byParent
+
+  // Fallback: E18 at the same address (same postcode + street)
+  const byAddress = points.find(
+    (p) =>
+      p.typeOfMP === 'E18' &&
+      p.postcode === importPoint.postcode &&
+      p.streetName === importPoint.streetName,
+  )
+  return byAddress ?? null
+}
+
+/**
+ * Returns import (E17) and export (E18) metering point IDs for the given import meter.
+ * @deprecated Use fetchAllMeteringPoints + findExportPoint for new code.
+ */
+export async function fetchMeteringPointId(dataToken: string): Promise<string> {
+  const points = await fetchAllMeteringPoints(dataToken)
   const importPoint = points.find((p) => p.typeOfMP === 'E17') ?? points[0]
-  const exportPoint = points.find((p) => p.typeOfMP === 'E18') ?? null
+  return importPoint.meteringPointId
+}
+
+/**
+ * Returns import (E17) and export (E18) metering point IDs.
+ * exportId is null if no solar export meter is found.
+ * @deprecated Use fetchAllMeteringPoints for new code.
+ */
+export async function fetchMeteringPoints(
+  dataToken: string,
+): Promise<{ importId: string; exportId: string | null }> {
+  const points = await fetchAllMeteringPoints(dataToken)
+  const importPoint = points.find((p) => p.typeOfMP === 'E17') ?? points[0]
+  const exportPoint = findExportPoint(points, importPoint.meteringPointId)
 
   return {
     importId: importPoint.meteringPointId,

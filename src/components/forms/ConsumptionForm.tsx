@@ -84,6 +84,12 @@ export function ConsumptionForm() {
       </div>
 
       <EloverblikForm />
+
+      {!isEloverblik && (
+        <p className="text-xs text-muted-foreground border-t border-border pt-3">
+          Har du allerede solceller? Hent forbruget via Eloverblik — vi rekonstruerer dit faktiske forbrug og simulerer effekten af en udvidelse.
+        </p>
+      )}
     </div>
   )
 }

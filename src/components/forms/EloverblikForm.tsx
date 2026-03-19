@@ -124,13 +124,18 @@ export function EloverblikForm() {
 
   return (
     <div className="space-y-3 pt-3 border-t border-border">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Hent dit faktiske forbrug</p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium">Hent dit faktiske forbrug</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Timebaserede data giver langt mere præcise resultater — og låser op for batterioptimering.
+          </p>
+        </div>
         <a
           href="https://eloverblik.dk"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:underline shrink-0 mt-0.5"
         >
           eloverblik.dk <ExternalLink className="h-3 w-3" />
         </a>

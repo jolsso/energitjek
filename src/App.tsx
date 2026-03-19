@@ -132,8 +132,8 @@ export default function App() {
                     />
                   </div>
                 )}
-                {consumption.hasExport && <ExistingSolarForm />}
-                <SolarConfigForm label={consumption.hasExport && existingSolarConfig ? 'Simuleret udvidelse' : undefined} />
+                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm />}
+                <SolarConfigForm label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined} />
                 <InvestmentForm />
                 <BatteryConfigForm />
               </div>

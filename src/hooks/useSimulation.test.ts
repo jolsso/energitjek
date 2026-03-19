@@ -77,8 +77,8 @@ beforeEach(() => {
   // API defaults
   vi.mocked(fetchPVGISData).mockResolvedValue(makePVGIS())
   vi.mocked(fetchSpotPrices).mockResolvedValue([])
-  vi.mocked(fetchCO2Emissions).mockResolvedValue(null)
-  vi.mocked(fetchGridTariff).mockResolvedValue(null)
+  vi.mocked(fetchCO2Emissions).mockRejectedValue(new Error('mocked'))
+  vi.mocked(fetchGridTariff).mockRejectedValue(new Error('mocked'))
   vi.mocked(dsoFromPostcode).mockReturnValue(null)
   vi.mocked(runSimulation).mockReturnValue(MOCK_RESULT)
 

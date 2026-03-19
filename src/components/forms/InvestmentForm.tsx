@@ -54,7 +54,7 @@ export function InvestmentForm() {
             id="investment"
             type="range"
             min={0}
-            max={200000}
+            max={400000}
             step={1000}
             value={investmentDkk}
             onChange={(e) => setInvestmentDkk(parseInt(e.target.value))}
@@ -62,7 +62,7 @@ export function InvestmentForm() {
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Ikke angivet</span>
-            <span>200.000 kr.</span>
+            <span>400.000 kr.</span>
           </div>
           <p className="text-xs text-muted-foreground">
             Typisk 6 kWp anlæg koster 80.000–120.000 kr. inkl. montering

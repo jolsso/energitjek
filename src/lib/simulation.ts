@@ -34,6 +34,20 @@ const CO2_GRID_FACTOR_KG_PER_KWH = 0.130
 const FLAT_FEED_IN_PRICE_DKK = 0.10
 
 /**
+ * Add-on loads applied on top of base household consumption.
+ *   heatpumpKwh : annual kWh added by a heat pump (uses heatpump shape)
+ *   evKmPerDay  : daily EV driving distance (kWh = km × 0.2);
+ *                 charging is scheduled in the cheapest hours 21:00–06:00
+ */
+export interface SimulationAddons {
+  heatpumpKwh?: number
+  evKmPerDay?:  number
+}
+
+/** Exported so forms can show the same constant. */
+export const HEATPUMP_ADDON_KWH = 6500
+
+/**
  * Core simulation: joins hourly production, consumption, and optional prices
  * to compute self-consumption, grid flows, and savings.
  */
@@ -43,14 +57,16 @@ export function runSimulation(
   prices?: HourlyPrice[],
   co2FactorsKgPerKwh?: number[],
   battery?: BatteryConfig,
+  addons?: SimulationAddons,
 ): SimulationResult {
   const n = pvgis.hourly.length  // 8760 or 8784
 
-  // Build hourly consumption profile (kWh)
-  const consumptionProfile = buildConsumptionProfile(consumption, n)
-
-  // Build hourly price profile (DKK/kWh retail and feed-in)
+  // Build hourly price profile first — needed for EV schedule optimisation
   const priceProfile = buildPriceProfile(prices, n)
+
+  // Build combined hourly consumption profile (base + optional add-ons)
+  const consumptionProfile = buildCombinedConsumptionProfile(consumption, n, priceProfile, addons)
+  const totalAnnualKwh = consumptionProfile.reduce((s, v) => s + v, 0)
 
   // Battery setup: efficiency split evenly across charge and discharge halves
   // Round-trip eta=0.90 → store sqrtEta per half-cycle, so charge×discharge = eta
@@ -135,8 +151,81 @@ export function runSimulation(
     hourly.push(entry)
   }
 
-  const summary = computeSummary(hourly, consumption.annualKwh, co2FactorsKgPerKwh)
+  const summary = computeSummary(hourly, totalAnnualKwh, co2FactorsKgPerKwh)
   return { hourly, summary }
+}
+
+/**
+ * EV home-charger max power (kW). Typical Type-2 wallbox, 16 A single-phase.
+ * Limits hourly EV draw — excess rolls to the next cheapest hour.
+ */
+const EV_MAX_CHARGE_KW = 11
+
+/**
+ * Builds an hourly EV charging profile optimised for cheap overnight hours.
+ * Each day's charge window is 21:00–06:00 (9 hours).
+ * Hours are sorted by spot price (ascending) and filled greedily up to
+ * EV_MAX_CHARGE_KW per hour until the daily kWh need is met.
+ * Falls back to sequential fill when prices are flat (no optimisation possible).
+ */
+function buildEVChargeProfile(n: number, kmPerDay: number, prices: HourlyPrices[]): number[] {
+  const dailyKwh = kmPerDay * 0.2
+  const profile  = new Array<number>(n).fill(0)
+  const days     = Math.ceil(n / 24)
+
+  for (let d = 0; d < days; d++) {
+    // Collect candidate indices: 21–23 of day d, then 00–05 of day d+1
+    const candidates: number[] = []
+    for (const h of [21, 22, 23]) {
+      const idx = d * 24 + h
+      if (idx < n) candidates.push(idx)
+    }
+    for (const h of [0, 1, 2, 3, 4, 5]) {
+      const idx = (d + 1) * 24 + h
+      if (idx < n) candidates.push(idx)
+    }
+    if (candidates.length === 0) continue
+
+    // Sort cheapest first
+    candidates.sort((a, b) => (prices[a]?.spot ?? 0) - (prices[b]?.spot ?? 0))
+
+    let remaining = dailyKwh
+    for (const idx of candidates) {
+      if (remaining <= 0) break
+      const charge = Math.min(remaining, EV_MAX_CHARGE_KW)
+      profile[idx] += charge
+      remaining -= charge
+    }
+  }
+  return profile
+}
+
+/**
+ * Builds the combined hourly consumption profile: base household
+ * plus optional heat-pump and EV add-ons.
+ */
+function buildCombinedConsumptionProfile(
+  data: ConsumptionData,
+  n: number,
+  priceProfile: HourlyPrices[],
+  addons?: SimulationAddons,
+): number[] {
+  const base = buildConsumptionProfile(data, n)
+
+  if (addons?.heatpumpKwh) {
+    const hp = buildConsumptionProfile(
+      { source: 'manual', annualKwh: addons.heatpumpKwh, profile: 'heatpump' },
+      n,
+    )
+    for (let i = 0; i < n; i++) base[i] += hp[i]
+  }
+
+  if (addons?.evKmPerDay) {
+    const ev = buildEVChargeProfile(n, addons.evKmPerDay, priceProfile)
+    for (let i = 0; i < n; i++) base[i] += ev[i]
+  }
+
+  return base
 }
 
 /**

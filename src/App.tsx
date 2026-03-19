@@ -122,7 +122,6 @@ export default function App() {
             <div className={inputMode === 'manual' ? 'max-w-xl mx-auto space-y-4' : 'hidden'}>
               <AddressForm />
               <ConsumptionForm />
-              <PricingForm />
             </div>
 
             {error && (
@@ -208,6 +207,7 @@ export default function App() {
                 {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <ConsumptionAddonsForm />
                 <BatteryConfigForm advanced={advanced} />
+                <PricingForm />
               </div>
 
               {/* Results */}

@@ -1,6 +1,5 @@
 import { Zap, Info } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
-import { EloverblikForm } from './EloverblikForm'
 
 const PRESETS = [
   { label: 'Lejlighed',    kwh: 2500 },
@@ -12,7 +11,6 @@ const PRESETS = [
 
 export function ConsumptionForm() {
   const { consumption, setConsumption } = useAppStore()
-  const isEloverblik = consumption.source === 'eloverblik'
 
   return (
     <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
@@ -30,38 +28,34 @@ export function ConsumptionForm() {
               <li>🌆 <span className="text-foreground">Aften (18–20):</span> forbrugspeak</li>
               <li>📅 <span className="text-foreground">Weekend:</span> +8–12 % ift. hverdage</li>
             </ul>
-            <p className="mt-1.5">Totalt årstal er uændret. Gælder kun manuelt forbrug — Eloverblik-data bruges som det er.</p>
+            <p className="mt-1.5">Totalt årstal er uændret.</p>
           </div>
         </span>
       </h2>
 
       <div className="space-y-3">
-        {!isEloverblik && (
-          <div className="flex flex-wrap gap-1.5">
-            {PRESETS.map(({ label, kwh }) => {
-              const active = consumption.annualKwh === kwh
-              return (
-                <button
-                  key={kwh}
-                  onClick={() => setConsumption({ annualKwh: kwh, source: 'manual', hourlyKwh: undefined })}
-                  className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                    active
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/30'
-                  }`}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-1.5">
+          {PRESETS.map(({ label, kwh }) => {
+            const active = consumption.annualKwh === kwh
+            return (
+              <button
+                key={kwh}
+                onClick={() => setConsumption({ annualKwh: kwh, source: 'manual', hourlyKwh: undefined })}
+                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
 
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
-            <label htmlFor="annual-kwh" className={`font-medium ${isEloverblik ? 'text-muted-foreground' : ''}`}>
-              Årligt elforbrug
-            </label>
+            <label htmlFor="annual-kwh" className="font-medium">Årligt elforbrug</label>
             <span className="text-muted-foreground">{consumption.annualKwh.toLocaleString('da-DK')} kWh</span>
           </div>
           <input
@@ -72,24 +66,13 @@ export function ConsumptionForm() {
             step={250}
             value={consumption.annualKwh}
             onChange={(e) => setConsumption({ annualKwh: parseInt(e.target.value), source: 'manual', hourlyKwh: undefined })}
-            disabled={isEloverblik}
-            className="w-full accent-primary disabled:opacity-40"
+            className="w-full accent-primary"
           />
           <p className="text-xs text-muted-foreground">
-            {isEloverblik
-              ? 'Brug Nulstil nedenfor for at skifte til manuel indtastning.'
-              : 'En gennemsnitlig dansk husstand bruger ca. 5.000 kWh/år'}
+            En gennemsnitlig dansk husstand bruger ca. 5.000 kWh/år
           </p>
         </div>
       </div>
-
-      <EloverblikForm />
-
-      {!isEloverblik && (
-        <p className="text-xs text-muted-foreground border-t border-border pt-3">
-          Har du allerede solceller? Hent forbruget via Eloverblik — vi rekonstruerer dit faktiske forbrug og simulerer effekten af en udvidelse.
-        </p>
-      )}
     </div>
   )
 }

@@ -111,22 +111,19 @@ export default function App() {
               ))}
             </div>
 
-            {/* Mode content */}
-            {inputMode === 'eloverblik' ? (
-              <div className="max-w-xl mx-auto space-y-4">
-                <EloverblikSetupForm />
+            {/* Mode content — both always mounted to preserve local state across mode switches */}
+            <div className={inputMode === 'eloverblik' ? 'max-w-xl mx-auto space-y-4' : 'hidden'}>
+              <EloverblikSetupForm />
+            </div>
+            <div className={inputMode === 'manual' ? 'grid gap-6 md:grid-cols-2' : 'hidden'}>
+              <div className="space-y-4">
+                <AddressForm />
+                <ConsumptionForm />
               </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <AddressForm />
-                  <ConsumptionForm />
-                </div>
-                <div className="space-y-4">
-                  <PricingForm />
-                </div>
+              <div className="space-y-4">
+                <PricingForm />
               </div>
-            )}
+            </div>
 
             {error && (
               <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">

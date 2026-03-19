@@ -124,14 +124,14 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
   )
 }
 
-export function SolarConfigForm() {
+export function SolarConfigForm({ label, advanced = false }: { label?: string; advanced?: boolean }) {
   const { solarConfig, setSolarConfig } = useAppStore()
 
   return (
     <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-5">
       <h2 className="font-semibold flex items-center gap-2">
         <Sun className="h-4 w-4 text-primary" />
-        Solcelleanlæg
+        {label ?? 'Solcelleanlæg'}
       </h2>
 
       <SliderField
@@ -145,50 +145,54 @@ export function SolarConfigForm() {
         onChange={(v) => setSolarConfig({ peakKw: v })}
       />
 
-      <SliderField
-        label="Hældning"
-        value={solarConfig.tiltDeg}
-        min={0}
-        max={90}
-        step={5}
-        unit="°"
-        description="0° = vandret, 35° er typisk for dansk tag"
-        onChange={(v) => setSolarConfig({ tiltDeg: v })}
-      >
-        <TiltIllustration tiltDeg={solarConfig.tiltDeg} />
-      </SliderField>
+      {advanced && (
+        <>
+          <SliderField
+            label="Hældning"
+            value={solarConfig.tiltDeg}
+            min={0}
+            max={90}
+            step={5}
+            unit="°"
+            description="0° = vandret, 35° er typisk for dansk tag"
+            onChange={(v) => setSolarConfig({ tiltDeg: v })}
+          >
+            <TiltIllustration tiltDeg={solarConfig.tiltDeg} />
+          </SliderField>
 
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <label className="font-medium">Retning (azimut)</label>
-          <span className="text-muted-foreground">
-            {azimuthLabel(solarConfig.azimuthDeg)} ({solarConfig.azimuthDeg}°)
-          </span>
-        </div>
-        <input
-          type="range"
-          min={-180}
-          max={180}
-          step={5}
-          value={solarConfig.azimuthDeg}
-          onChange={(e) => setSolarConfig({ azimuthDeg: parseInt(e.target.value) })}
-          className="w-full accent-primary"
-        />
-        <p className="text-xs text-muted-foreground">
-          -180°/180° = nord, -90° = øst, 0° = syd (optimalt), 90° = vest · Retning vises på kortet
-        </p>
-      </div>
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <label className="font-medium">Retning (azimut)</label>
+              <span className="text-muted-foreground">
+                {azimuthLabel(solarConfig.azimuthDeg)} ({solarConfig.azimuthDeg}°)
+              </span>
+            </div>
+            <input
+              type="range"
+              min={-180}
+              max={180}
+              step={5}
+              value={solarConfig.azimuthDeg}
+              onChange={(e) => setSolarConfig({ azimuthDeg: parseInt(e.target.value) })}
+              className="w-full accent-primary"
+            />
+            <p className="text-xs text-muted-foreground">
+              -180°/180° = nord, -90° = øst, 0° = syd (optimalt), 90° = vest · Retning vises på kortet
+            </p>
+          </div>
 
-      <SliderField
-        label="Systemtab"
-        value={solarConfig.systemLossPct}
-        min={0}
-        max={30}
-        step={1}
-        unit="%"
-        description="Inkl. kabelstab, vekselretter, snavs. 5% er typisk for nyt anlæg."
-        onChange={(v) => setSolarConfig({ systemLossPct: v })}
-      />
+          <SliderField
+            label="Systemtab"
+            value={solarConfig.systemLossPct}
+            min={0}
+            max={30}
+            step={1}
+            unit="%"
+            description="Inkl. kabelstab, vekselretter, snavs. 5% er typisk for nyt anlæg."
+            onChange={(v) => setSolarConfig({ systemLossPct: v })}
+          />
+        </>
+      )}
     </div>
   )
 }

@@ -32,35 +32,123 @@ export function clearTokenCache(): void {
   _cachedToken = null
 }
 
+export interface MeteringPoint {
+  meteringPointId: string
+  typeOfMP: string
+  streetName?: string
+  buildingNumber?: string
+  postcode?: string
+  cityName?: string
+  parentMeteringPointId?: string
+}
+
 /**
- * Returns the first metering point ID accessible with the given data access token.
+ * Returns all metering points accessible with the given data access token,
+ * including address details for display in a selection UI.
  */
-export async function fetchMeteringPointId(dataToken: string): Promise<string> {
+export async function fetchAllMeteringPoints(dataToken: string): Promise<MeteringPoint[]> {
   const res = await fetch(`${BASE}/api/meteringpoints/meteringpoints?includeAll=false`, {
     headers: { Authorization: `Bearer ${dataToken}` },
   })
   if (!res.ok) throw new Error(`Målepunkter kunne ikke hentes: ${res.status}`)
 
   const data = await res.json()
-  const points: { meteringPointId: string }[] = data.result ?? []
-  if (!points.length) throw new Error('Ingen målepunkter fundet. Kontrollér at tokenet har adgang til forbrugsdata.')
+  const raw: Record<string, unknown>[] = data.result ?? []
+  if (!raw.length) throw new Error('Ingen målepunkter fundet. Kontrollér at tokenet har adgang til forbrugsdata.')
 
-  return points[0].meteringPointId
+  return raw.map((p) => ({
+    meteringPointId: p['meteringPointId'] as string,
+    typeOfMP: (p['typeOfMP'] as string) ?? '',
+    streetName: p['streetName'] as string | undefined,
+    buildingNumber: p['buildingNumber'] as string | undefined,
+    postcode: p['postcode'] as string | undefined,
+    cityName: p['cityName'] as string | undefined,
+    parentMeteringPointId: (p['parentMeteringPoint'] as Record<string, string> | undefined)?.meteringPointId,
+  }))
+}
+
+/**
+ * Given all metering points and a selected E17 import meter,
+ * finds the associated E18 export meter (by parentMeteringPoint or matching postcode).
+ */
+export function findExportPoint(points: MeteringPoint[], importId: string): MeteringPoint | null {
+  const importPoint = points.find((p) => p.meteringPointId === importId)
+  if (!importPoint) return null
+
+  // Prefer E18 that explicitly references this E17 as parent
+  const byParent = points.find(
+    (p) => p.typeOfMP === 'E18' && p.parentMeteringPointId === importId,
+  )
+  if (byParent) return byParent
+
+  // Fallback: E18 at the same address (same postcode + street)
+  const byAddress = points.find(
+    (p) =>
+      p.typeOfMP === 'E18' &&
+      p.postcode === importPoint.postcode &&
+      p.streetName === importPoint.streetName,
+  )
+  return byAddress ?? null
+}
+
+/**
+ * Returns import (E17) and export (E18) metering point IDs for the given import meter.
+ * @deprecated Use fetchAllMeteringPoints + findExportPoint for new code.
+ */
+export async function fetchMeteringPointId(dataToken: string): Promise<string> {
+  const points = await fetchAllMeteringPoints(dataToken)
+  const importPoint = points.find((p) => p.typeOfMP === 'E17') ?? points[0]
+  return importPoint.meteringPointId
+}
+
+/**
+ * Returns import (E17) and export (E18) metering point IDs.
+ * exportId is null if no solar export meter is found.
+ * @deprecated Use fetchAllMeteringPoints for new code.
+ */
+export async function fetchMeteringPoints(
+  dataToken: string,
+): Promise<{ importId: string; exportId: string | null }> {
+  const points = await fetchAllMeteringPoints(dataToken)
+  const importPoint = points.find((p) => p.typeOfMP === 'E17') ?? points[0]
+  const exportPoint = findExportPoint(points, importPoint.meteringPointId)
+
+  return {
+    importId: importPoint.meteringPointId,
+    exportId: exportPoint?.meteringPointId ?? null,
+  }
 }
 
 /**
  * Fetches hourly consumption for a full year via the Eloverblik MeterData API.
  * Returns a flat array of kWh values (one per hour, 8760 entries for non-leap years)
  * aligned with PVGIS data (Danish local time, UTC+1 winter / UTC+2 summer).
+ * @deprecated Use fetchHourlyData for new code.
  */
 export async function fetchHourlyConsumption(
   dataToken: string,
   meteringPointId: string,
   year: number = DATA_YEAR,
 ): Promise<{ hourlyKwh: number[]; annualKwh: number }> {
+  const { importKwh, annualKwh } = await fetchHourlyData(dataToken, meteringPointId, null, year)
+  return { hourlyKwh: importKwh, annualKwh }
+}
+
+/**
+ * Fetches hourly import and optionally export data for a full year.
+ * When exportId is provided, both meters are fetched in a single API call.
+ */
+export async function fetchHourlyData(
+  dataToken: string,
+  importId: string,
+  exportId: string | null,
+  year: number = DATA_YEAR,
+): Promise<{ importKwh: number[]; exportKwh: number[] | null; annualKwh: number; hasExport: boolean }> {
   // Fetch slightly wider than one year to capture all local-time hours
   const dateFrom = `${year - 1}-12-31`
   const dateTo   = `${year + 1}-01-01`
+
+  const ids = exportId ? [importId, exportId] : [importId]
 
   const res = await fetch(`${BASE}/api/meterdata/gettimeseries/${dateFrom}/${dateTo}/Hour`, {
     method: 'POST',
@@ -68,12 +156,20 @@ export async function fetchHourlyConsumption(
       Authorization: `Bearer ${dataToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ meteringPoints: { meteringPoint: [meteringPointId] } }),
+    body: JSON.stringify({ meteringPoints: { meteringPoint: ids } }),
   })
   if (!res.ok) throw new Error(`Forbrugsdata kunne ikke hentes: ${res.status}`)
 
   const data = await res.json()
-  return parseConsumptionResponse(data, year)
+  const { hourlyKwh: importKwh, annualKwh } = parseConsumptionResponse(data, year, 0)
+
+  let exportKwh: number[] | null = null
+  if (exportId) {
+    const { hourlyKwh } = parseConsumptionResponse(data, year, 1)
+    exportKwh = hourlyKwh
+  }
+
+  return { importKwh, exportKwh, annualKwh, hasExport: exportId !== null }
 }
 
 // --- Types for the CIM/EDIFACT response format ---
@@ -105,9 +201,10 @@ interface EloverblikTimeSeries {
 export function parseConsumptionResponse(
   raw: unknown,
   year: number,
+  resultIndex: number = 0,
 ): { hourlyKwh: number[]; annualKwh: number } {
   const doc = (raw as Record<string, unknown>)
-  const result = (doc?.['result'] as unknown[])?.[0] as Record<string, unknown>
+  const result = (doc?.['result'] as unknown[])?.[resultIndex] as Record<string, unknown>
   const marketDoc = result?.['MyEnergyData_MarketDocument'] as Record<string, unknown>
   const timeSeries = ((marketDoc?.['TimeSeries'] as unknown[]) ?? [])[0] as EloverblikTimeSeries
 

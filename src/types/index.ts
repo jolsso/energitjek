@@ -15,11 +15,23 @@ export interface Coordinates {
 // --- Consumption ---
 export type ConsumptionSource = 'manual' | 'eloverblik'
 
+/**
+ * Hourly load-shape template used for manual consumption.
+ * - standard:  typical Danish household (morning + evening peaks)
+ * - heatpump:  heat pump dominated — more even load, morning/afternoon peaks
+ * - ev:        EV home charging dominated — high consumption 22:00–06:00
+ */
+export type ConsumptionProfile = 'standard' | 'heatpump' | 'ev'
+
 export interface ConsumptionData {
   source: ConsumptionSource
   annualKwh: number
+  profile?: ConsumptionProfile
   // Hourly profile indexed by hour-of-year (0–8759), kWh per hour
   hourlyKwh?: number[]
+  // Set when user has existing solar — hourly grid export kWh from Eloverblik
+  exportKwh?: number[]
+  hasExport?: boolean
 }
 
 // --- PVGIS response ---

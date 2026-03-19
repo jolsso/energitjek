@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { parseConsumptionResponse, fetchDataAccessToken, fetchMeteringPointId, clearTokenCache } from './eloverblik'
+import {
+  parseConsumptionResponse,
+  fetchDataAccessToken,
+  fetchMeteringPointId,
+  fetchAllMeteringPoints,
+  findExportPoint,
+  clearTokenCache,
+} from './eloverblik'
 
 // --- parseConsumptionResponse ---
 
@@ -127,10 +134,10 @@ describe('fetchDataAccessToken', () => {
 describe('fetchMeteringPointId', () => {
   beforeEach(() => vi.restoreAllMocks())
 
-  it('returns first metering point ID', async () => {
+  it('returns E17 metering point ID', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ result: [{ meteringPointId: '571313174000012345' }] }),
+      json: async () => ({ result: [{ meteringPointId: '571313174000012345', typeOfMP: 'E17' }] }),
     }))
 
     const id = await fetchMeteringPointId('data-token')
@@ -144,5 +151,102 @@ describe('fetchMeteringPointId', () => {
     }))
 
     await expect(fetchMeteringPointId('data-token')).rejects.toThrow('Ingen målepunkter')
+  })
+})
+
+// --- fetchAllMeteringPoints ---
+
+describe('fetchAllMeteringPoints', () => {
+  beforeEach(() => vi.restoreAllMocks())
+
+  it('maps address fields onto returned objects', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: [{
+          meteringPointId: '111',
+          typeOfMP: 'E17',
+          streetName: 'Testvej',
+          buildingNumber: '1',
+          postcode: '8000',
+          cityName: 'Aarhus C',
+        }],
+      }),
+    }))
+
+    const points = await fetchAllMeteringPoints('data-token')
+    expect(points).toHaveLength(1)
+    expect(points[0]).toMatchObject({
+      meteringPointId: '111',
+      typeOfMP: 'E17',
+      streetName: 'Testvej',
+      postcode: '8000',
+      cityName: 'Aarhus C',
+    })
+  })
+
+  it('returns multiple metering points', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: [
+          { meteringPointId: '111', typeOfMP: 'E17', postcode: '8000' },
+          { meteringPointId: '222', typeOfMP: 'E17', postcode: '9000' },
+          { meteringPointId: '333', typeOfMP: 'E18', postcode: '8000' },
+        ],
+      }),
+    }))
+
+    const points = await fetchAllMeteringPoints('data-token')
+    expect(points).toHaveLength(3)
+  })
+
+  it('maps parentMeteringPoint.meteringPointId', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: [{
+          meteringPointId: '333',
+          typeOfMP: 'E18',
+          parentMeteringPoint: { meteringPointId: '111' },
+        }],
+      }),
+    }))
+
+    const points = await fetchAllMeteringPoints('data-token')
+    expect(points[0].parentMeteringPointId).toBe('111')
+  })
+})
+
+// --- findExportPoint ---
+
+describe('findExportPoint', () => {
+  it('finds E18 by parentMeteringPointId', () => {
+    const points = [
+      { meteringPointId: '111', typeOfMP: 'E17', postcode: '8000' },
+      { meteringPointId: '333', typeOfMP: 'E18', postcode: '8000', parentMeteringPointId: '111' },
+    ]
+    expect(findExportPoint(points, '111')?.meteringPointId).toBe('333')
+  })
+
+  it('falls back to address match when no parent link', () => {
+    const points = [
+      { meteringPointId: '111', typeOfMP: 'E17', postcode: '8000', streetName: 'Testvej' },
+      { meteringPointId: '333', typeOfMP: 'E18', postcode: '8000', streetName: 'Testvej' },
+    ]
+    expect(findExportPoint(points, '111')?.meteringPointId).toBe('333')
+  })
+
+  it('returns null when no E18 present', () => {
+    const points = [{ meteringPointId: '111', typeOfMP: 'E17', postcode: '8000' }]
+    expect(findExportPoint(points, '111')).toBeNull()
+  })
+
+  it('does not match E18 from a different address', () => {
+    const points = [
+      { meteringPointId: '111', typeOfMP: 'E17', postcode: '8000', streetName: 'Testvej' },
+      { meteringPointId: '333', typeOfMP: 'E18', postcode: '9000', streetName: 'Andenvej' },
+    ]
+    expect(findExportPoint(points, '111')).toBeNull()
   })
 })

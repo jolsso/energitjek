@@ -1,10 +1,19 @@
 import { Zap, Info } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
-import { EloverblikForm } from './EloverblikForm'
+import type { ConsumptionProfile } from '@/types'
+
+const PRESETS: { label: string; kwh: number; profile: ConsumptionProfile }[] = [
+  { label: 'Lejlighed',      kwh: 2500,  profile: 'standard' },
+  { label: 'Parcelhus',      kwh: 5000,  profile: 'standard' },
+  { label: 'Stor familie',   kwh: 8000,  profile: 'standard' },
+  { label: 'Varmepumpe',     kwh: 12000, profile: 'heatpump' },
+  // El-bil: 5.000 kWh basis + km/dag × 0,2 kWh/km × 365 dage
+  { label: 'El-bil 50 km',  kwh: 8650,  profile: 'ev' },
+  { label: 'El-bil 100 km', kwh: 12300, profile: 'ev' },
+]
 
 export function ConsumptionForm() {
   const { consumption, setConsumption } = useAppStore()
-  const isEloverblik = consumption.source === 'eloverblik'
 
   return (
     <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
@@ -22,37 +31,51 @@ export function ConsumptionForm() {
               <li>🌆 <span className="text-foreground">Aften (18–20):</span> forbrugspeak</li>
               <li>📅 <span className="text-foreground">Weekend:</span> +8–12 % ift. hverdage</li>
             </ul>
-            <p className="mt-1.5">Totalt årstal er uændret. Gælder kun manuelt forbrug — Eloverblik-data bruges som det er.</p>
+            <p className="mt-1.5">Totalt årstal er uændret.</p>
           </div>
         </span>
       </h2>
 
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <label htmlFor="annual-kwh" className={`font-medium ${isEloverblik ? 'text-muted-foreground' : ''}`}>
-            Årligt elforbrug
-          </label>
-          <span className="text-muted-foreground">{consumption.annualKwh.toLocaleString('da-DK')} kWh</span>
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-1.5">
+          {PRESETS.map(({ label, kwh, profile }) => {
+            const active = consumption.annualKwh === kwh
+            return (
+              <button
+                key={kwh}
+                onClick={() => setConsumption({ annualKwh: kwh, profile, source: 'manual', hourlyKwh: undefined })}
+                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
-        <input
-          id="annual-kwh"
-          type="range"
-          min={1000}
-          max={30000}
-          step={250}
-          value={consumption.annualKwh}
-          onChange={(e) => setConsumption({ annualKwh: parseInt(e.target.value), source: 'manual', hourlyKwh: undefined })}
-          disabled={isEloverblik}
-          className="w-full accent-primary disabled:opacity-40"
-        />
-        <p className="text-xs text-muted-foreground">
-          {isEloverblik
-            ? 'Brug Nulstil nedenfor for at skifte til manuel indtastning.'
-            : 'En gennemsnitlig dansk husstand bruger ca. 5.000 kWh/år'}
-        </p>
-      </div>
 
-      <EloverblikForm />
+        <div className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <label htmlFor="annual-kwh" className="font-medium">Årligt elforbrug</label>
+            <span className="text-muted-foreground">{consumption.annualKwh.toLocaleString('da-DK')} kWh</span>
+          </div>
+          <input
+            id="annual-kwh"
+            type="range"
+            min={1000}
+            max={30000}
+            step={250}
+            value={consumption.annualKwh}
+            onChange={(e) => setConsumption({ annualKwh: parseInt(e.target.value), source: 'manual', hourlyKwh: undefined })}
+            className="w-full accent-primary"
+          />
+          <p className="text-xs text-muted-foreground">
+            En gennemsnitlig dansk husstand bruger ca. 5.000 kWh/år
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

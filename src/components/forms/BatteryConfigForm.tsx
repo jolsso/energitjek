@@ -16,7 +16,7 @@ const STRATEGIES: { id: BatteryConfig['strategy']; label: string; desc: string }
   { id: 'time-of-use',      label: 'Time-of-use',  desc: 'Optimer efter timepris' },
 ]
 
-export function BatteryConfigForm() {
+export function BatteryConfigForm({ advanced = false }: { advanced?: boolean }) {
   const batteryConfig    = useAppStore((s) => s.batteryConfig)
   const setBatteryConfig = useAppStore((s) => s.setBatteryConfig)
 
@@ -68,48 +68,52 @@ export function BatteryConfigForm() {
             <p className="text-xs text-muted-foreground">Batteriets brugbare kapacitet</p>
           </div>
 
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <label className="font-medium">Max. effekt (lade/aflade)</label>
-              <span className="text-muted-foreground">{config.maxChargeKw} kW</span>
-            </div>
-            <input
-              type="range"
-              min={1}
-              max={20}
-              value={config.maxChargeKw}
-              onChange={(e) => {
-                const kw = Number(e.target.value)
-                update({ maxChargeKw: kw, maxDischargeKw: kw })
-              }}
-              className="w-full accent-primary"
-            />
-            <p className="text-xs text-muted-foreground">Maks. lade- og afladeveffekt</p>
-          </div>
+          {advanced && (
+            <>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <label className="font-medium">Max. effekt (lade/aflade)</label>
+                  <span className="text-muted-foreground">{config.maxChargeKw} kW</span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={20}
+                  value={config.maxChargeKw}
+                  onChange={(e) => {
+                    const kw = Number(e.target.value)
+                    update({ maxChargeKw: kw, maxDischargeKw: kw })
+                  }}
+                  className="w-full accent-primary"
+                />
+                <p className="text-xs text-muted-foreground">Maks. lade- og afladeveffekt</p>
+              </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Strategi</label>
-            <div className="grid grid-cols-1 gap-1.5 mt-1">
-              {STRATEGIES.map(({ id, label, desc }) => (
-                <label
-                  key={id}
-                  className="flex items-start gap-2.5 rounded-lg border border-border p-2.5 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name="battery-strategy"
-                    checked={config.strategy === id}
-                    onChange={() => update({ strategy: id })}
-                    className="mt-0.5 accent-primary shrink-0"
-                  />
-                  <div>
-                    <p className="text-sm font-medium leading-none">{label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Strategi</label>
+                <div className="grid grid-cols-1 gap-1.5 mt-1">
+                  {STRATEGIES.map(({ id, label, desc }) => (
+                    <label
+                      key={id}
+                      className="flex items-start gap-2.5 rounded-lg border border-border p-2.5 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="battery-strategy"
+                        checked={config.strategy === id}
+                        onChange={() => update({ strategy: id })}
+                        className="mt-0.5 accent-primary shrink-0"
+                      />
+                      <div>
+                        <p className="text-sm font-medium leading-none">{label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

@@ -82,18 +82,7 @@ beforeEach(() => {
   vi.mocked(dsoFromPostcode).mockReturnValue(null)
   vi.mocked(runSimulation).mockReturnValue(MOCK_RESULT)
 
-  // Re-export the constant so the hook can read it
-  vi.mocked(vi.importActual as unknown as typeof vi.mock)
-
-  // Ensure HEATPUMP_ADDON_KWH is available from the simulation mock
-  const simMock = vi.mocked(runSimulation)
-  ;(simMock as unknown as Record<string, unknown>)['HEATPUMP_ADDON_KWH'] = 6500
 })
-
-// Helper to set DATA_YEAR export from pvgis mock
-function setPvgisMockExports() {
-  // Already handled via vi.mock('@/lib/pvgis') — DATA_YEAR = 2023 set below
-}
 
 // Vitest auto-mock doesn't set named exports to values; set them manually
 beforeEach(async () => {
@@ -110,8 +99,6 @@ beforeEach(async () => {
 
   const simMod = await import('@/lib/simulation')
   ;(simMod as unknown as Record<string, unknown>).HEATPUMP_ADDON_KWH = 6500
-
-  setPvgisMockExports()
 })
 
 // --- Tests ---

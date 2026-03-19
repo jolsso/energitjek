@@ -4,6 +4,8 @@ import { makeNominatimResponse } from './fixtures/pvgis'
 test.describe('Address form', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
+    // AddressForm is only visible in manual input mode
+    await page.getByRole('button', { name: 'Manuel' }).click()
   })
 
   test('shows matched display name after successful geocoding', async ({ page }) => {

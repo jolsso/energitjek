@@ -154,11 +154,31 @@ export default function App() {
               >
                 ← Ret adresse og forbrug
               </button>
-              {isLoading && (
-                <span className="text-xs text-muted-foreground animate-pulse">
-                  Opdaterer simulering…
-                </span>
-              )}
+              <div className="flex items-center gap-3">
+                {isLoading && (
+                  <span className="text-xs text-muted-foreground animate-pulse">
+                    Opdaterer simulering…
+                  </span>
+                )}
+                <div className="flex rounded-lg border border-border bg-muted p-0.5 text-sm">
+                  <button
+                    onClick={() => setAdvanced(false)}
+                    className={`rounded-md px-3 py-1 font-medium transition-colors ${
+                      !advanced ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Standard
+                  </button>
+                  <button
+                    onClick={() => setAdvanced(true)}
+                    className={`rounded-md px-3 py-1 font-medium transition-colors ${
+                      advanced ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Avanceret
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 items-start">
@@ -177,26 +197,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Standard / Avanceret toggle */}
-                <div className="flex rounded-lg border border-border bg-muted p-0.5 text-sm">
-                  <button
-                    onClick={() => setAdvanced(false)}
-                    className={`flex-1 rounded-md py-1.5 font-medium transition-colors ${
-                      !advanced ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Standard
-                  </button>
-                  <button
-                    onClick={() => setAdvanced(true)}
-                    className={`flex-1 rounded-md py-1.5 font-medium transition-colors ${
-                      advanced ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Avanceret
-                  </button>
-                </div>
-
                 {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <SolarConfigForm
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
@@ -208,7 +208,7 @@ export default function App() {
 
               {/* Results */}
               <div className="min-w-0 order-1 lg:order-2">
-                <ResultsPanel />
+                <ResultsPanel advanced={advanced} />
               </div>
             </div>
           </div>

@@ -18,7 +18,7 @@ function azimuthShort(deg: number): string {
   return 'NV'
 }
 
-export function ResultsPanel() {
+export function ResultsPanel({ advanced = false }: { advanced?: boolean }) {
   const { simulationResult, pvgisData, investmentDkk, solarConfig, address } = useAppStore()
 
   if (!simulationResult) return null
@@ -57,9 +57,13 @@ export function ResultsPanel() {
           annualSavedDkk={simulationResult.summary.annualSavedDkk}
         />
       )}
-      <EnergyFlowChart summary={simulationResult.summary} />
-      <MonthlyChart hourly={simulationResult.hourly} />
-      <MonthlySavingsChart hourly={simulationResult.hourly} />
+      {advanced && (
+        <>
+          <EnergyFlowChart summary={simulationResult.summary} />
+          <MonthlyChart hourly={simulationResult.hourly} />
+          <MonthlySavingsChart hourly={simulationResult.hourly} />
+        </>
+      )}
     </div>
   )
 }

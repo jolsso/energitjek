@@ -200,7 +200,6 @@ export default function App() {
                   </div>
                 )}
 
-                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <SolarConfigForm
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
                   advanced={advanced}
@@ -208,6 +207,7 @@ export default function App() {
                 <InvestmentForm />
                 <ConsumptionAddonsForm />
                 <BatteryConfigForm advanced={advanced} />
+                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
               </div>
 
               {/* Results */}

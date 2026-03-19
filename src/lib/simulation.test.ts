@@ -288,3 +288,49 @@ describe('runSimulation — summary', () => {
     expect(result.summary.paybackYears).toBeNull()
   })
 })
+
+describe('runSimulation — consumption profiles', () => {
+  // Build a full-year PVGIS with solar only during hours 08–15 (daytime)
+  // so we can see how much each profile overlaps with solar.
+  function makeSolarYear(): PVGISData {
+    const watts = Array.from({ length: 8760 }, (_, i) => {
+      const h = i % 24
+      return h >= 8 && h <= 15 ? 500 : 0  // 500W during daylight hours
+    })
+    return {
+      hourly: watts.map((P, i) => {
+        const day = Math.floor(i / 24) + 1
+        const hh = String(i % 24).padStart(2, '0')
+        return { time: `2023${String(day).padStart(3,'0')}:${hh}00`, P, G_i: 0, T2m: 10 }
+      }),
+      annualKwh: watts.reduce((s, w) => s + w / 1000, 0),
+      location: { lat: 56, lon: 10 },
+    }
+  }
+
+  it('ev profile has lower selfConsumptionPct than standard (EV charges at night)', () => {
+    const pvgis = makeSolarYear()
+    const annual = 5000
+    const standard = runSimulation(pvgis, { source: 'manual', annualKwh: annual, profile: 'standard' })
+    const ev       = runSimulation(pvgis, { source: 'manual', annualKwh: annual, profile: 'ev' })
+
+    expect(ev.summary.selfConsumptionPct).toBeLessThan(standard.summary.selfConsumptionPct)
+  })
+
+  it('heatpump profile has higher selfConsumptionPct than ev (more even daytime load)', () => {
+    const pvgis = makeSolarYear()
+    const annual = 5000
+    const heatpump = runSimulation(pvgis, { source: 'manual', annualKwh: annual, profile: 'heatpump' })
+    const ev       = runSimulation(pvgis, { source: 'manual', annualKwh: annual, profile: 'ev' })
+
+    expect(heatpump.summary.selfConsumptionPct).toBeGreaterThan(ev.summary.selfConsumptionPct)
+  })
+
+  it('defaults to standard profile when profile is undefined', () => {
+    const pvgis = makeSolarYear()
+    const withProfile  = runSimulation(pvgis, { source: 'manual', annualKwh: 5000, profile: 'standard' })
+    const withoutProfile = runSimulation(pvgis, { source: 'manual', annualKwh: 5000 })
+
+    expect(withoutProfile.summary.selfConsumptionPct).toBeCloseTo(withProfile.summary.selfConsumptionPct, 5)
+  })
+})

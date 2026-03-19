@@ -1,12 +1,13 @@
 import { Zap, Info } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
+import type { ConsumptionProfile } from '@/types'
 
-const PRESETS = [
-  { label: 'Lejlighed',    kwh: 2500 },
-  { label: 'Parcelhus',    kwh: 5000 },
-  { label: 'Stor familie', kwh: 8000 },
-  { label: 'Varmepumpe',   kwh: 12000 },
-  { label: 'El-bil',       kwh: 16000 },
+const PRESETS: { label: string; kwh: number; profile: ConsumptionProfile }[] = [
+  { label: 'Lejlighed',    kwh: 2500,  profile: 'standard' },
+  { label: 'Parcelhus',    kwh: 5000,  profile: 'standard' },
+  { label: 'Stor familie', kwh: 8000,  profile: 'standard' },
+  { label: 'Varmepumpe',   kwh: 12000, profile: 'heatpump' },
+  { label: 'El-bil',       kwh: 16000, profile: 'ev'       },
 ]
 
 export function ConsumptionForm() {
@@ -40,7 +41,7 @@ export function ConsumptionForm() {
             return (
               <button
                 key={kwh}
-                onClick={() => setConsumption({ annualKwh: kwh, source: 'manual', hourlyKwh: undefined })}
+                onClick={() => setConsumption({ annualKwh: kwh, profile, source: 'manual', hourlyKwh: undefined })}
                 className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
                   active
                     ? 'border-primary bg-primary text-primary-foreground'

@@ -141,16 +141,46 @@ export function runSimulation(
 
 /**
  * Relative consumption weights by hour of day (0–23).
- * Represents a typical Danish single-family household:
- * low at night, morning and evening peaks, lower midday.
  * Un-normalized — buildConsumptionProfile scales to annualKwh.
  */
-const HOURLY_SHAPE: readonly number[] = [
+
+/** Standard Danish household: morning (07–09) and evening (18–21) peaks, low at night. */
+const HOURLY_SHAPE_STANDARD: readonly number[] = [
   0.28, 0.23, 0.20, 0.19, 0.19, 0.27,  // 00–05  night
   0.55, 0.95, 0.85, 0.72, 0.65, 0.65,  // 06–11  morning
   0.70, 0.65, 0.62, 0.68, 0.90, 1.25,  // 12–17  midday / ramp-up
   1.45, 1.55, 1.45, 1.25, 0.92, 0.56,  // 18–23  evening / wind-down
 ]
+
+/**
+ * Heat pump dominated: relatively even load driven by thermal demand.
+ * Peaks in morning (heating up the house) and early evening. Less sharp
+ * than a standard household — heat pumps run continuously rather than in bursts.
+ */
+const HOURLY_SHAPE_HEATPUMP: readonly number[] = [
+  0.70, 0.65, 0.62, 0.60, 0.62, 0.72,  // 00–05  overnight heating
+  0.95, 1.15, 1.10, 1.00, 0.95, 0.90,  // 06–11  morning demand
+  0.85, 0.85, 0.88, 0.95, 1.05, 1.15,  // 12–17  afternoon ramp
+  1.20, 1.15, 1.05, 0.95, 0.85, 0.75,  // 18–23  evening / taper
+]
+
+/**
+ * EV home charging dominated: car plugs in ~22:00 and charges through the night
+ * until ~06:00. The bulk of added consumption happens at night with minimal
+ * overlap with solar production.
+ */
+const HOURLY_SHAPE_EV: readonly number[] = [
+  2.40, 2.60, 2.60, 2.50, 2.20, 1.40,  // 00–05  overnight charging
+  0.55, 0.90, 0.80, 0.68, 0.62, 0.62,  // 06–11  car done, normal household
+  0.65, 0.62, 0.60, 0.65, 0.85, 1.15,  // 12–17  midday / ramp-up
+  1.35, 1.40, 1.30, 1.10, 1.80, 2.20,  // 18–23  evening peak + car starts charging
+]
+
+const HOURLY_SHAPES = {
+  standard: HOURLY_SHAPE_STANDARD,
+  heatpump: HOURLY_SHAPE_HEATPUMP,
+  ev:       HOURLY_SHAPE_EV,
+} as const
 
 /**
  * Day-of-week multiplier indexed from Sunday (0) to Saturday (6).
@@ -163,10 +193,12 @@ function buildConsumptionProfile(data: ConsumptionData, n: number): number[] {
   if (data.hourlyKwh && data.hourlyKwh.length === n) {
     return data.hourlyKwh
   }
+  // Select hourly shape based on consumption profile type
+  const shape = HOURLY_SHAPES[data.profile ?? 'standard']
   // Weekly shape: combine hour-of-day profile with day-of-week weight,
   // then normalize so the total equals annualKwh.
   const weights = Array.from({ length: n }, (_, i) =>
-    HOURLY_SHAPE[i % 24] * DAY_WEIGHTS[Math.floor(i / 24) % 7]
+    shape[i % 24] * DAY_WEIGHTS[Math.floor(i / 24) % 7]
   )
   const scale = data.annualKwh / weights.reduce((s, w) => s + w, 0)
   return weights.map(w => w * scale)

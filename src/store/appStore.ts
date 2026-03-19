@@ -110,6 +110,7 @@ export const useAppStore = create<AppState>()(
         consumption: {
           source: s.consumption.source,
           annualKwh: s.consumption.annualKwh,
+          profile: s.consumption.profile,
           // Do not persist hourly consumption data (potentially sensitive)
         },
       }),

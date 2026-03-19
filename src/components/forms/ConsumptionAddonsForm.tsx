@@ -20,7 +20,7 @@ export function ConsumptionAddonsForm() {
           <div className="pointer-events-none absolute left-1/2 top-5 z-10 w-72 -translate-x-1/2 rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
             <p className="font-medium text-foreground mb-1.5">Tillæg til husstanden forbrug</p>
             <p className="mb-1.5"><span className="font-medium text-foreground">Varmepumpe</span> — tilføjer {HEATPUMP_ADDON_KWH.toLocaleString('da-DK')} kWh/år med en jævn lastprofil (morgen- og eftermiddagspeak).</p>
-            <p><span className="font-medium text-foreground">El-bil</span> — 200 Wh/km. Opladning skemalægges automatisk til de billigste tilgængelige timer mellem kl. 21 og 06 baseret på spotpriser. Max. ladeeffekt: 7,4 kW.</p>
+            <p><span className="font-medium text-foreground">El-bil</span> — 200 Wh/km. Opladning skemalægges automatisk til de billigste tilgængelige timer mellem kl. 21 og 06 baseret på spotpriser. Max. ladeeffekt: 11 kW.</p>
           </div>
         </span>
       </h2>

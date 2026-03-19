@@ -159,7 +159,7 @@ export function runSimulation(
  * EV home-charger max power (kW). Typical Type-2 wallbox, 16 A single-phase.
  * Limits hourly EV draw — excess rolls to the next cheapest hour.
  */
-const EV_MAX_CHARGE_KW = 7.4
+const EV_MAX_CHARGE_KW = 11
 
 /**
  * Builds an hourly EV charging profile optimised for cheap overnight hours.

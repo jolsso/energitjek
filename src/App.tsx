@@ -115,14 +115,10 @@ export default function App() {
             <div className={inputMode === 'eloverblik' ? 'max-w-xl mx-auto space-y-4' : 'hidden'}>
               <EloverblikSetupForm />
             </div>
-            <div className={inputMode === 'manual' ? 'grid gap-6 md:grid-cols-2' : 'hidden'}>
-              <div className="space-y-4">
-                <AddressForm />
-                <ConsumptionForm />
-              </div>
-              <div className="space-y-4">
-                <PricingForm />
-              </div>
+            <div className={inputMode === 'manual' ? 'max-w-xl mx-auto space-y-4' : 'hidden'}>
+              <AddressForm />
+              <ConsumptionForm />
+              <PricingForm />
             </div>
 
             {error && (

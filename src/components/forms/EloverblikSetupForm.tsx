@@ -180,12 +180,22 @@ export function EloverblikSetupForm() {
             )}
           </div>
         </div>
-        <button
-          onClick={handleReset}
-          className="text-xs text-muted-foreground hover:text-foreground underline"
-        >
-          Brug en anden konto eller adresse
-        </button>
+        <div className="flex items-center gap-3">
+          {importPoints.length > 1 && (
+            <button
+              onClick={() => setStatus('selecting')}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              Skift adresse
+            </button>
+          )}
+          <button
+            onClick={handleReset}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Brug en anden konto
+          </button>
+        </div>
       </div>
     )
   }

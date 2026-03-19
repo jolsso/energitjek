@@ -5,6 +5,7 @@ import { PricingForm } from '@/components/forms/PricingForm'
 import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
 import { InvestmentForm } from '@/components/forms/InvestmentForm'
 import { BatteryConfigForm } from '@/components/forms/BatteryConfigForm'
+import { ConsumptionAddonsForm } from '@/components/forms/ConsumptionAddonsForm'
 import { ExistingSolarForm } from '@/components/forms/ExistingSolarForm'
 import { EloverblikSetupForm } from '@/components/forms/EloverblikSetupForm'
 import { AddressMap } from '@/components/map/AddressMap'
@@ -24,6 +25,8 @@ export default function App() {
   const reset = useAppStore((s) => s.reset)
   const solarConfig = useAppStore((s) => s.solarConfig)
   const batteryConfig = useAppStore((s) => s.batteryConfig)
+  const heatpumpEnabled = useAppStore((s) => s.heatpumpEnabled)
+  const evKmPerDay = useAppStore((s) => s.evKmPerDay)
   const existingSolarConfig = useAppStore((s) => s.existingSolarConfig)
   const consumption = useAppStore((s) => s.consumption)
   const coordinates = useAppStore((s) => s.coordinates)
@@ -49,7 +52,7 @@ export default function App() {
     if (step !== 'results') return
     const timer = setTimeout(() => { runSimulationRef.current() }, 700)
     return () => clearTimeout(timer)
-  }, [solarConfig, batteryConfig, existingSolarConfig, step])
+  }, [solarConfig, batteryConfig, heatpumpEnabled, evKmPerDay, existingSolarConfig, step])
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,6 +200,7 @@ export default function App() {
                   </div>
                 )}
 
+                <ConsumptionAddonsForm />
                 {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <SolarConfigForm
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}

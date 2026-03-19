@@ -3,7 +3,7 @@ import { useAppStore } from '@/store/appStore'
 import { fetchPVGISData, DATA_YEAR } from '@/lib/pvgis'
 import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER, EUR_TO_DKK } from '@/lib/energidataservice'
 import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK } from '@/lib/gridtariff'
-import { runSimulation } from '@/lib/simulation'
+import { runSimulation, HEATPUMP_ADDON_KWH } from '@/lib/simulation'
 import type { ConsumptionData, HourlyPrice } from '@/types'
 
 export function useSimulation() {
@@ -17,6 +17,8 @@ export function useSimulation() {
     consumption,
     priceArea,
     fixedSpotDkk,
+    heatpumpEnabled,
+    evKmPerDay,
     batteryConfig,
     existingSolarConfig,
     setPVGISData,
@@ -110,7 +112,17 @@ export function useSimulation() {
         }
       }
 
-      const result = runSimulation(pvgis, effectiveConsumption, prices, co2Factors ?? undefined, batteryConfig ?? undefined)
+      const result = runSimulation(
+        pvgis,
+        effectiveConsumption,
+        prices,
+        co2Factors ?? undefined,
+        batteryConfig ?? undefined,
+        {
+          heatpumpKwh: heatpumpEnabled ? HEATPUMP_ADDON_KWH : undefined,
+          evKmPerDay:  evKmPerDay ?? undefined,
+        },
+      )
       setSimulationResult(result)
       return true
     } catch (e) {

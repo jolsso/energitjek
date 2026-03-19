@@ -303,7 +303,7 @@ describe('runSimulation — consumption profiles', () => {
         const hh = String(i % 24).padStart(2, '0')
         return { time: `2023${String(day).padStart(3,'0')}:${hh}00`, P, G_i: 0, T2m: 10 }
       }),
-      annualKwh: watts.reduce((s, w) => s + w / 1000, 0),
+      annualKwh: watts.reduce((s: number, w) => s + w / 1000, 0),
       location: { lat: 56, lon: 10 },
     }
   }

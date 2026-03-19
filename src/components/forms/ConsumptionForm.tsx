@@ -38,7 +38,7 @@ export function ConsumptionForm() {
 
       <div className="space-y-3">
         <div className="flex flex-wrap gap-1.5">
-          {PRESETS.map(({ label, kwh }) => {
+          {PRESETS.map(({ label, kwh, profile }) => {
             const active = consumption.annualKwh === kwh
             return (
               <button

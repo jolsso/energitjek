@@ -8,7 +8,7 @@ const DEFAULT_EXISTING: NonNullable<ReturnType<typeof useAppStore.getState>['exi
   systemLossPct: 5,
 }
 
-export function ExistingSolarForm() {
+export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) {
   const existingSolarConfig    = useAppStore((s) => s.existingSolarConfig)
   const setExistingSolarConfig = useAppStore((s) => s.setExistingSolarConfig)
 
@@ -67,38 +67,42 @@ export function ExistingSolarForm() {
             <p className="text-xs text-muted-foreground">Dit nuværende anlægs toppeffekt</p>
           </div>
 
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <label className="font-medium">Hældning</label>
-              <span className="text-muted-foreground">{config.tiltDeg}°</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={90}
-              step={5}
-              value={config.tiltDeg}
-              onChange={(e) => update({ tiltDeg: parseInt(e.target.value) })}
-              className="w-full accent-primary"
-            />
-          </div>
+          {advanced && (
+            <>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <label className="font-medium">Hældning</label>
+                  <span className="text-muted-foreground">{config.tiltDeg}°</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={90}
+                  step={5}
+                  value={config.tiltDeg}
+                  onChange={(e) => update({ tiltDeg: parseInt(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+              </div>
 
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <label className="font-medium">Retning (azimut)</label>
-              <span className="text-muted-foreground">{config.azimuthDeg}°</span>
-            </div>
-            <input
-              type="range"
-              min={-180}
-              max={180}
-              step={5}
-              value={config.azimuthDeg}
-              onChange={(e) => update({ azimuthDeg: parseInt(e.target.value) })}
-              className="w-full accent-primary"
-            />
-            <p className="text-xs text-muted-foreground">-90° = øst · 0° = syd · 90° = vest</p>
-          </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <label className="font-medium">Retning (azimut)</label>
+                  <span className="text-muted-foreground">{config.azimuthDeg}°</span>
+                </div>
+                <input
+                  type="range"
+                  min={-180}
+                  max={180}
+                  step={5}
+                  value={config.azimuthDeg}
+                  onChange={(e) => update({ azimuthDeg: parseInt(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+                <p className="text-xs text-muted-foreground">-90° = øst · 0° = syd · 90° = vest</p>
+              </div>
+            </>
+          )}
 
           <p className="text-xs text-amber-700 border-t border-amber-200 pt-3">
             Simulationsformen nedenfor repræsenterer den <span className="font-medium">udvidelse</span> du ønsker at beregne oven i dit nuværende anlæg.

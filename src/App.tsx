@@ -197,7 +197,7 @@ export default function App() {
                   </button>
                 </div>
 
-                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm />}
+                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <SolarConfigForm
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
                   advanced={advanced}

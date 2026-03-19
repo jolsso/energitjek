@@ -76,7 +76,7 @@ export function ConsumptionAddonsForm() {
             <input
               type="range"
               min={10}
-              max={150}
+              max={250}
               step={5}
               value={evKmPerDay!}
               onChange={(e) => setEvKmPerDay(Number(e.target.value))}

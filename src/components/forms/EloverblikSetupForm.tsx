@@ -217,7 +217,7 @@ export function EloverblikSetupForm() {
   }
 
   return (
-    <div className="space-y-4 max-w-md mx-auto">
+    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
       <div className="space-y-3">
         <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
           <li>Log ind på <a href="https://eloverblik.dk" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-0.5">eloverblik.dk <ExternalLink className="h-2.5 w-2.5" /></a> med MitID</li>

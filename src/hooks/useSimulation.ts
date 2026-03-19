@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { fetchPVGISData, DATA_YEAR } from '@/lib/pvgis'
-import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER } from '@/lib/energidataservice'
+import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER, EUR_TO_DKK } from '@/lib/energidataservice'
 import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK } from '@/lib/gridtariff'
 import { runSimulation } from '@/lib/simulation'
 import type { ConsumptionData, HourlyPrice } from '@/types'
@@ -16,6 +16,7 @@ export function useSimulation() {
     solarConfig,
     consumption,
     priceArea,
+    fixedSpotDkk,
     batteryConfig,
     existingSolarConfig,
     setPVGISData,
@@ -40,10 +41,13 @@ export function useSimulation() {
         existingSolarConfig && consumption.hasExport
           ? fetchPVGISData(coordinates, existingSolarConfig)
           : Promise.resolve(null),
-        fetchSpotPrices(DATA_YEAR, priceArea).catch((err) => {
-          console.warn('Spotpriser ikke tilgængelige — bruger faste priser.', err)
-          return null
-        }),
+        // Skip spot price fetch when user has set a fixed spot price
+        fixedSpotDkk === null
+          ? fetchSpotPrices(DATA_YEAR, priceArea).catch((err) => {
+              console.warn('Spotpriser ikke tilgængelige — bruger faste priser.', err)
+              return null
+            })
+          : Promise.resolve(null),
         dso
           ? fetchGridTariff(dso.glnNumber).catch((err) => {
               console.warn(`Nettarif ikke tilgængelig for ${dso.name} — bruger fast tarif.`, err)
@@ -59,7 +63,17 @@ export function useSimulation() {
       setPVGISData(pvgis)
 
       let prices: HourlyPrice[] | undefined
-      if (rawPrices) {
+      if (fixedSpotDkk !== null) {
+        // Build flat hourly prices using the user-specified spot price
+        const spotEur = (fixedSpotDkk / EUR_TO_DKK) * 1000  // DKK/kWh → EUR/MWh
+        prices = Array.from({ length: pvgis.hourly.length }, (_, i) => ({
+          hourStart: pvgis.hourly[i].time,
+          spotEur,
+          tariffDkk: tariff24
+            ? (tariff24[i % 24] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
+            : (ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER,
+        }))
+      } else if (rawPrices) {
         prices = rawPrices.map((p, i) => ({
           ...p,
           tariffDkk: tariff24

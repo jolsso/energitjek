@@ -9,8 +9,12 @@ const AREAS: { value: PriceArea; label: string }[] = [
 ]
 
 export function PricingForm() {
-  const { priceArea, setPriceArea, postcode, coordinates } = useAppStore()
+  const { priceArea, setPriceArea, postcode, coordinates, fixedSpotDkk, setFixedSpotDkk } = useAppStore()
   const dso = postcode ? dsoFromPostcode(postcode) : null
+
+  const fixedEnabled = fixedSpotDkk !== null
+  // Display and edit in øre/kWh; store as DKK/kWh
+  const oreValue = fixedEnabled ? Math.round(fixedSpotDkk * 100) : 60
 
   return (
     <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
@@ -66,6 +70,50 @@ export function PricingForm() {
           <p className="text-xs text-muted-foreground">
             Timebaseret nettarif hentes automatisk til simuleringen.
           </p>
+        )}
+      </div>
+
+      <div className="space-y-3 border-t border-border pt-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Fast spotpris</p>
+            <p className="text-xs text-muted-foreground">Tilsidesæt timebaserede spotpriser</p>
+          </div>
+          <button
+            onClick={() => setFixedSpotDkk(fixedEnabled ? null : oreValue / 100)}
+            role="switch"
+            aria-checked={fixedEnabled}
+            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+              fixedEnabled ? 'bg-primary' : 'bg-muted'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                fixedEnabled ? 'translate-x-4' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+
+        {fixedEnabled && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <label className="font-medium">Spotpris</label>
+              <span className="text-muted-foreground">{oreValue} øre/kWh</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={300}
+              step={5}
+              value={oreValue}
+              onChange={(e) => setFixedSpotDkk(Number(e.target.value) / 100)}
+              className="w-full accent-primary"
+            />
+            <p className="text-xs text-muted-foreground">
+              Ekskl. moms og afgifter · Dansk gennemsnit: ~60–80 øre/kWh
+            </p>
+          </div>
         )}
       </div>
     </div>

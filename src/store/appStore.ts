@@ -19,6 +19,7 @@ interface AppState {
   consumption: ConsumptionData
   priceArea: PriceArea
   investmentDkk: number
+  fixedSpotDkk: number | null
   batteryConfig: BatteryConfig | null
   existingSolarConfig: SolarConfig | null
 
@@ -34,6 +35,7 @@ interface AppState {
   setConsumption: (consumption: Partial<ConsumptionData> & { hourlyKwh?: number[] | undefined }) => void
   setPriceArea: (area: PriceArea) => void
   setInvestmentDkk: (dkk: number) => void
+  setFixedSpotDkk: (dkk: number | null) => void
   setBatteryConfig: (config: BatteryConfig | null) => void
   setExistingSolarConfig: (config: SolarConfig | null) => void
   setPVGISData: (data: PVGISData | null) => void
@@ -63,6 +65,7 @@ export const useAppStore = create<AppState>()(
       consumption: DEFAULT_CONSUMPTION,
       priceArea: 'DK2',
       investmentDkk: 0,
+      fixedSpotDkk: null,
       batteryConfig: null,
       existingSolarConfig: null,
       pvgisData: null,
@@ -77,6 +80,7 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ consumption: { ...s.consumption, ...consumption } })),
       setPriceArea: (priceArea) => set({ priceArea }),
       setInvestmentDkk: (investmentDkk) => set({ investmentDkk }),
+      setFixedSpotDkk: (fixedSpotDkk) => set({ fixedSpotDkk }),
       setBatteryConfig: (batteryConfig) => set({ batteryConfig }),
       setExistingSolarConfig: (existingSolarConfig) => set({ existingSolarConfig }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
@@ -90,6 +94,7 @@ export const useAppStore = create<AppState>()(
           consumption: DEFAULT_CONSUMPTION,
           priceArea: 'DK2',
           investmentDkk: 0,
+          fixedSpotDkk: null,
           batteryConfig: null,
           existingSolarConfig: null,
           pvgisData: null,
@@ -105,6 +110,7 @@ export const useAppStore = create<AppState>()(
         solarConfig: s.solarConfig,
         priceArea: s.priceArea,
         investmentDkk: s.investmentDkk,
+        fixedSpotDkk: s.fixedSpotDkk,
         batteryConfig: s.batteryConfig,
         existingSolarConfig: s.existingSolarConfig,
         consumption: {

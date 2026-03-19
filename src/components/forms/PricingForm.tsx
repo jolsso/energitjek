@@ -2,7 +2,6 @@ import { Zap, CheckCircle2 } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import type { PriceArea } from '@/lib/energidataservice'
 import { dsoFromPostcode } from '@/lib/gridtariff'
-import { ComingSoon } from '@/components/ComingSoon'
 
 const AREAS: { value: PriceArea; label: string }[] = [
   { value: 'DK1', label: 'DK1 — Vest (Jylland/Fyn)' },
@@ -48,17 +47,27 @@ export function PricingForm() {
         })}
       </div>
 
-      <ComingSoon phase="Phase 2b" title="Netselskab">
-        <div className="space-y-1.5">
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
           <label className="text-xs font-medium text-muted-foreground">Netselskab</label>
-          <div className="flex items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2">
-            <span className="text-sm text-muted-foreground">
-              {dso ? dso.name : 'Bestemmes fra postnummer'}
+          {dso && (
+            <span className="inline-flex items-center gap-1 text-xs text-green-700">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Auto-registreret
             </span>
-            <span className="text-xs text-muted-foreground">Auto</span>
-          </div>
+          )}
         </div>
-      </ComingSoon>
+        <div className="flex items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2">
+          <span className="text-sm text-muted-foreground">
+            {dso ? dso.name : 'Bestemmes automatisk fra postnummer'}
+          </span>
+        </div>
+        {dso && (
+          <p className="text-xs text-muted-foreground">
+            Timebaseret nettarif hentes automatisk til simuleringen.
+          </p>
+        )}
+      </div>
     </div>
   )
 }

@@ -3,11 +3,13 @@ import { useAppStore } from '@/store/appStore'
 import type { ConsumptionProfile } from '@/types'
 
 const PRESETS: { label: string; kwh: number; profile: ConsumptionProfile }[] = [
-  { label: 'Lejlighed',    kwh: 2500,  profile: 'standard' },
-  { label: 'Parcelhus',    kwh: 5000,  profile: 'standard' },
-  { label: 'Stor familie', kwh: 8000,  profile: 'standard' },
-  { label: 'Varmepumpe',   kwh: 12000, profile: 'heatpump' },
-  { label: 'El-bil',       kwh: 16000, profile: 'ev'       },
+  { label: 'Lejlighed',      kwh: 2500,  profile: 'standard' },
+  { label: 'Parcelhus',      kwh: 5000,  profile: 'standard' },
+  { label: 'Stor familie',   kwh: 8000,  profile: 'standard' },
+  { label: 'Varmepumpe',     kwh: 12000, profile: 'heatpump' },
+  // El-bil: 5.000 kWh basis + km/dag × 0,2 kWh/km × 365 dage
+  { label: 'El-bil 50 km',  kwh: 8650,  profile: 'ev' },
+  { label: 'El-bil 100 km', kwh: 12300, profile: 'ev' },
 ]
 
 export function ConsumptionForm() {

@@ -32,7 +32,7 @@ export function ResultsPanel({ advanced = false }: { advanced?: boolean }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-2xl font-bold truncate">
           {shortAddress ? `Potentiale for ${shortAddress}` : 'Dine resultater'}
         </h2>
         <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -50,7 +50,7 @@ export function ResultsPanel({ advanced = false }: { advanced?: boolean }) {
         </div>
       </div>
 
-      <SummaryCards summary={simulationResult.summary} investmentDkk={investmentDkk} />
+      <SummaryCards summary={simulationResult.summary} />
       {investmentDkk > 0 && (
         <PaybackChart
           investmentDkk={investmentDkk}

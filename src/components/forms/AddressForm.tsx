@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPin, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { MapPin, Loader2, CheckCircle2, XCircle, Search } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { geocodeAddress } from '@/lib/geocoding'
 import { AddressMap } from '@/components/map/AddressMap'
@@ -59,7 +59,10 @@ export function AddressForm() {
           disabled={loading || !localAddress.trim()}
           className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Søg'}
+          {loading
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <span className="flex items-center gap-1.5"><Search className="h-4 w-4" />Søg</span>
+          }
         </button>
       </div>
 

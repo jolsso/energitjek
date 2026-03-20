@@ -63,7 +63,7 @@ export function PaybackChart({ investmentDkk, annualSavedDkk }: Props) {
         <p className="text-xs text-muted-foreground mt-0.5">
           {pb != null
             ? `Anlægget betaler sig tilbage efter ca. ${pb.toFixed(1).replace('.', ',')} år — herefter er det ren gevinst.`
-            : `Med disse besparelser betaler anlægget sig ikke tilbage inden for ${PANEL_LIFETIME} år.`}
+            : `Tilbagebetalingstiden overstiger ${PANEL_LIFETIME} år med det angivne investeringsbeløb. Justér beløbet nedenfor for at se break-even.`}
         </p>
       </div>
 

@@ -1,17 +1,12 @@
-import { Zap, Sun, TrendingDown, Percent, CalendarClock, Leaf } from 'lucide-react'
+import { Zap, Sun, TrendingDown, Percent, Leaf } from 'lucide-react'
 import type { SimulationSummary } from '@/types'
 import { formatDkk, formatKwh, formatPct } from '@/lib/utils'
 
 interface Props {
   summary: SimulationSummary
-  investmentDkk?: number
 }
 
-export function SummaryCards({ summary, investmentDkk = 0 }: Props) {
-  const paybackYears = investmentDkk > 0 && summary.annualSavedDkk > 0
-    ? investmentDkk / summary.annualSavedDkk
-    : null
-
+export function SummaryCards({ summary }: Props) {
   const cards = [
     {
       icon: Sun,
@@ -45,12 +40,6 @@ export function SummaryCards({ summary, investmentDkk = 0 }: Props) {
         : `${Math.round(summary.co2SavedKg)} kg`,
       sub: 'Undgået CO₂ pr. år',
     },
-    ...(paybackYears != null ? [{
-      icon: CalendarClock,
-      label: 'Tilbagebetalingstid',
-      value: `${paybackYears.toFixed(1).replace('.', ',')} år`,
-      sub: `Ved investering på ${investmentDkk.toLocaleString('da-DK')} kr.`,
-    }] : []),
   ]
 
   return (

@@ -1,10 +1,11 @@
-import { Zap, ShieldCheck, Github } from 'lucide-react'
+import { Zap, ShieldCheck, Github, Calculator } from 'lucide-react'
 
 interface Props {
   onPrivacy: () => void
+  onMethodology: () => void
 }
 
-export function Header({ onPrivacy }: Props) {
+export function Header({ onPrivacy, onMethodology }: Props) {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-card/80 backdrop-blur-md">
       <div className="container mx-auto px-4 max-w-5xl h-14 flex items-center justify-between">
@@ -29,6 +30,13 @@ export function Header({ onPrivacy }: Props) {
           >
             <Github className="h-4 w-4" />
           </a>
+          <button
+            onClick={onMethodology}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            Metode
+          </button>
           <button
             onClick={onPrivacy}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"

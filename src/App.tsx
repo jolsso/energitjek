@@ -12,13 +12,14 @@ import { AddressMap } from '@/components/map/AddressMap'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
 import { PrivacyPage } from '@/components/PrivacyPage'
+import { MethodologyPage } from '@/components/MethodologyPage'
 import { useSimulation } from '@/hooks/useSimulation'
 import { useAppStore } from '@/store/appStore'
 
 type InputMode = 'eloverblik' | 'manual'
 
 export default function App() {
-  const [step, setStep] = useState<'input' | 'results' | 'privacy'>('input')
+  const [step, setStep] = useState<'input' | 'results' | 'privacy' | 'methodology'>('input')
   const [inputMode, setInputMode] = useState<InputMode>('eloverblik')
   const [advanced, setAdvanced] = useState(false)
   const { runSimulation, isLoading, error } = useSimulation()
@@ -56,10 +57,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onPrivacy={() => setStep('privacy')} />
+      <Header onPrivacy={() => setStep('privacy')} onMethodology={() => setStep('methodology')} />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {step === 'privacy' ? (
           <PrivacyPage onBack={() => setStep('input')} />
+        ) : step === 'methodology' ? (
+          <MethodologyPage onBack={() => setStep('input')} />
         ) : step === 'input' ? (
           <div className="space-y-8">
             {/* Hero */}

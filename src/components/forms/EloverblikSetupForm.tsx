@@ -41,7 +41,7 @@ interface Summary {
   hasExport: boolean
 }
 
-export function EloverblikSetupForm({ embedded = false }: { embedded?: boolean }) {
+export function EloverblikSetupForm({ embedded = false, onComplete }: { embedded?: boolean; onComplete?: () => void }) {
   const { setAddress, setPostcode, setCoordinates, setPriceArea, setConsumption } = useAppStore()
 
   const [token, setToken] = useState(
@@ -133,6 +133,7 @@ export function EloverblikSetupForm({ embedded = false }: { embedded?: boolean }
       hasExport,
     })
     setStatus('done')
+    onComplete?.()
   }
 
   const handleReset = () => {

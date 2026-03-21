@@ -6,7 +6,6 @@ import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
 import { BatteryConfigForm } from '@/components/forms/BatteryConfigForm'
 import { ConsumptionAddonsForm } from '@/components/forms/ConsumptionAddonsForm'
 import { ExistingSolarForm } from '@/components/forms/ExistingSolarForm'
-import { EloverblikSetupForm } from '@/components/forms/EloverblikSetupForm'
 import { AddressMap } from '@/components/map/AddressMap'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
@@ -39,16 +38,15 @@ export default function App() {
   // eslint-disable-next-line react-hooks/refs
   runSimulationRef.current = runSimulation
 
-  // Auto-simulate only when Eloverblik provides all data (address + real consumption)
-  // Manual address search does NOT auto-simulate — user clicks "Beregn" themselves
+  // Auto-simulate when coordinates first become available (address searched)
   const prevCoords = useRef<Coordinates | null>(coordinates)
   useEffect(() => {
     const prev = prevCoords.current
     prevCoords.current = coordinates
-    if (prev === null && coordinates !== null && !simulationResult && consumption.source === 'eloverblik') {
+    if (prev === null && coordinates !== null && !simulationResult) {
       runSimulationRef.current()
     }
-  }, [coordinates, simulationResult, consumption.source])
+  }, [coordinates, simulationResult])
 
   // Auto re-simulate when solar/battery/addon config changes while results exist
   const isInitialMount = useRef(true)
@@ -105,24 +103,12 @@ export default function App() {
                 <span className="gradient-text">solcelleøkonomi</span>
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto text-base leading-relaxed">
-                Hent dine data automatisk via Eloverblik, eller angiv adresse og forbrug selv.
+                Angiv din adresse — se din besparelse med det samme.
               </p>
             </div>
 
             {/* Input forms */}
             <div className="max-w-xl mx-auto space-y-4">
-
-              {/* Primary path: Eloverblik — auto-fetches address, consumption & price zone */}
-              <EloverblikSetupForm />
-
-              {/* Divider */}
-              <div className="relative flex items-center gap-3 py-1">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground shrink-0">eller angiv manuelt</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
-              {/* Secondary path: manual address + consumption */}
               <AddressForm />
               <ConsumptionForm />
             </div>

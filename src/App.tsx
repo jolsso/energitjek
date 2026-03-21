@@ -67,13 +67,13 @@ export default function App() {
           <div className="space-y-8">
             {/* Hero */}
             <div className="text-center space-y-3 mb-8">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground card-shadow mb-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 card-shadow mb-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block animate-pulse" />
                 Gratis · Ingen login · Ingen sporing
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                 Beregn din{' '}
-                <span className="text-primary">solcelleøkonomi</span>
+                <span className="gradient-text">solcelleøkonomi</span>
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto text-base leading-relaxed">
                 Hent alt automatisk via Eloverblik, eller konfigurer selv.
@@ -101,9 +101,10 @@ export default function App() {
                   onClick={() => setInputMode(id)}
                   className={`rounded-xl border p-4 text-left transition-all ${
                     inputMode === id
-                      ? 'border-primary bg-primary/5 shadow-sm'
+                      ? 'border-amber-300 bg-amber-50 shadow-sm'
                       : 'border-border bg-card hover:bg-muted'
                   }`}
+                  style={inputMode === id ? { boxShadow: '0 0 0 3px hsl(36 96% 48% / 0.12)' } : undefined}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-sm">{title}</span>
@@ -137,7 +138,11 @@ export default function App() {
               <button
                 onClick={handleCalculate}
                 disabled={isLoading || !coordinates}
-                className="px-10 py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold text-base hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                className="px-10 py-3.5 text-white rounded-xl font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-0.5 active:translate-y-0"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(36 96% 48%) 0%, hsl(24 96% 52%) 100%)',
+                  boxShadow: isLoading || !coordinates ? undefined : '0 4px 20px 0 hsl(36 96% 48% / 0.45), 0 2px 4px 0 rgb(0 0 0 / 0.1)',
+                }}
               >
                 {isLoading ? 'Beregner…' : 'Beregn besparelse'}
               </button>

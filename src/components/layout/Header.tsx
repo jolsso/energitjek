@@ -7,10 +7,10 @@ interface Props {
 
 export function Header({ onPrivacy, onMethodology }: Props) {
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-card/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-card/85 backdrop-blur-md" style={{ boxShadow: '0 1px 0 0 hsl(36 96% 48% / 0.15), 0 2px 8px 0 rgb(0 0 0 / 0.06)' }}>
       <div className="container mx-auto px-4 max-w-5xl h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'linear-gradient(135deg, hsl(36 96% 48%) 0%, hsl(24 96% 52%) 100%)', boxShadow: '0 2px 8px 0 hsl(36 96% 48% / 0.4)' }}>
             <Zap className="h-4 w-4 text-white" strokeWidth={2.5} />
           </div>
           <span className="font-semibold text-base tracking-tight">Er du sunshine?</span>

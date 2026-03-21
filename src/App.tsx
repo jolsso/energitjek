@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown, ChevronUp, Zap } from 'lucide-react'
 import { ConsumptionForm } from '@/components/forms/ConsumptionForm'
 import { AddressForm } from '@/components/forms/AddressForm'
 import { PricingForm } from '@/components/forms/PricingForm'
@@ -22,7 +21,6 @@ type Overlay = 'privacy' | 'methodology' | null
 export default function App() {
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [advanced, setAdvanced] = useState(false)
-  const [eloverblikOpen, setEloverblikOpen] = useState(false)
 
   const { runSimulation, isLoading, error } = useSimulation()
   const reset = useAppStore((s) => s.reset)
@@ -41,16 +39,16 @@ export default function App() {
   // eslint-disable-next-line react-hooks/refs
   runSimulationRef.current = runSimulation
 
-  // Auto-simulate when coordinates first become available (address searched)
+  // Auto-simulate only when Eloverblik provides all data (address + real consumption)
+  // Manual address search does NOT auto-simulate — user clicks "Beregn" themselves
   const prevCoords = useRef<Coordinates | null>(coordinates)
   useEffect(() => {
     const prev = prevCoords.current
     prevCoords.current = coordinates
-    // Only trigger when transitioning null → non-null and no results yet
-    if (prev === null && coordinates !== null && !simulationResult) {
+    if (prev === null && coordinates !== null && !simulationResult && consumption.source === 'eloverblik') {
       runSimulationRef.current()
     }
-  }, [coordinates, simulationResult])
+  }, [coordinates, simulationResult, consumption.source])
 
   // Auto re-simulate when solar/battery/addon config changes while results exist
   const isInitialMount = useRef(true)
@@ -107,49 +105,26 @@ export default function App() {
                 <span className="gradient-text">solcelleøkonomi</span>
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto text-base leading-relaxed">
-                Angiv din adresse — beregningen starter automatisk.
+                Hent dine data automatisk via Eloverblik, eller angiv adresse og forbrug selv.
               </p>
             </div>
 
             {/* Input forms */}
             <div className="max-w-xl mx-auto space-y-4">
+
+              {/* Primary path: Eloverblik — auto-fetches address, consumption & price zone */}
+              <EloverblikSetupForm />
+
+              {/* Divider */}
+              <div className="relative flex items-center gap-3 py-1">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground shrink-0">eller angiv manuelt</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Secondary path: manual address + consumption */}
               <AddressForm />
               <ConsumptionForm />
-
-              {/* Eloverblik — precision data, opt-in */}
-              <div className="rounded-xl border border-border bg-card card-shadow overflow-hidden">
-                <button
-                  onClick={() => setEloverblikOpen((o) => !o)}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/40 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-7 w-7 items-center justify-center rounded-lg shrink-0"
-                      style={{ background: 'linear-gradient(135deg, hsl(36 96% 48%) 0%, hsl(24 96% 52%) 100%)' }}
-                    >
-                      <Zap className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Hent data fra Eloverblik</p>
-                      <p className="text-xs text-muted-foreground">Adresse, forbrug og priszone hentes automatisk</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="hidden sm:inline text-[10px] font-medium rounded-full bg-primary/10 text-primary px-2 py-0.5">
-                      Mere præcist
-                    </span>
-                    {eloverblikOpen
-                      ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                      : <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    }
-                  </div>
-                </button>
-                {eloverblikOpen && (
-                  <div className="border-t border-border p-4">
-                    <EloverblikSetupForm embedded />
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Error */}

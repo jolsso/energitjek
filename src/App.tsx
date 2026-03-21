@@ -4,7 +4,6 @@ import { ConsumptionForm } from '@/components/forms/ConsumptionForm'
 import { AddressForm } from '@/components/forms/AddressForm'
 import { PricingForm } from '@/components/forms/PricingForm'
 import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
-import { InvestmentForm } from '@/components/forms/InvestmentForm'
 import { BatteryConfigForm } from '@/components/forms/BatteryConfigForm'
 import { ConsumptionAddonsForm } from '@/components/forms/ConsumptionAddonsForm'
 import { ExistingSolarForm } from '@/components/forms/ExistingSolarForm'
@@ -147,7 +146,7 @@ export default function App() {
                 </button>
                 {eloverblikOpen && (
                   <div className="border-t border-border p-4">
-                    <EloverblikSetupForm />
+                    <EloverblikSetupForm embedded />
                   </div>
                 )}
               </div>
@@ -249,7 +248,6 @@ export default function App() {
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
                   advanced={advanced}
                 />
-                <InvestmentForm />
                 {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <ConsumptionAddonsForm />
                 <BatteryConfigForm advanced={advanced} />

@@ -41,7 +41,7 @@ interface Summary {
   hasExport: boolean
 }
 
-export function EloverblikSetupForm() {
+export function EloverblikSetupForm({ embedded = false }: { embedded?: boolean }) {
   const { setAddress, setPostcode, setCoordinates, setPriceArea, setConsumption } = useAppStore()
 
   const [token, setToken] = useState(
@@ -153,7 +153,7 @@ export function EloverblikSetupForm() {
 
   if (status === 'done' && summary) {
     return (
-      <div className="space-y-4 max-w-md mx-auto">
+      <div className={embedded ? 'space-y-4' : 'space-y-4 max-w-md mx-auto'}>
         <div className="rounded-xl border border-green-200 bg-green-50 p-5 space-y-3">
           <p className="text-sm font-medium text-green-800">Alt hentet automatisk</p>
           <div className="space-y-2">
@@ -202,7 +202,7 @@ export function EloverblikSetupForm() {
 
   if (status === 'selecting') {
     return (
-      <div className="space-y-3 max-w-md mx-auto">
+      <div className={embedded ? 'space-y-3' : 'space-y-3 max-w-md mx-auto'}>
         <p className="text-sm font-medium text-center">
           Vi fandt {importPoints.length} adresser — vælg den du vil beregne for:
         </p>
@@ -226,9 +226,8 @@ export function EloverblikSetupForm() {
     )
   }
 
-  return (
-    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
-      <div className="space-y-3">
+  const idleContent = (
+    <div className="space-y-3">
         <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
           <li>Log ind på <a href="https://eloverblik.dk" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-0.5">eloverblik.dk <ExternalLink className="h-2.5 w-2.5" /></a> med MitID</li>
           <li>Klik <span className="font-medium text-foreground">☰ hamburgermenu</span> øverst</li>
@@ -288,6 +287,13 @@ export function EloverblikSetupForm() {
           Tokenet sendes kun til din egen server og bruges ikke til andet end at hente forbrugsdata.
         </p>
       </div>
+  )
+
+  if (embedded) return idleContent
+
+  return (
+    <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-4">
+      {idleContent}
     </div>
   )
 }

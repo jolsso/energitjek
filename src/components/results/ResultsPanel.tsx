@@ -4,6 +4,7 @@ import { EnergyFlowChart } from './EnergyFlowChart'
 import { MonthlyChart } from './MonthlyChart'
 import { MonthlySavingsChart } from './MonthlySavingsChart'
 import { PaybackChart } from './PaybackChart'
+import { InvestmentForm } from '@/components/forms/InvestmentForm'
 
 function azimuthShort(deg: number): string {
   const n = ((deg % 360) + 360) % 360
@@ -51,16 +52,22 @@ export function ResultsPanel({ advanced = false }: { advanced?: boolean }) {
       </div>
 
       <SummaryCards summary={simulationResult.summary} />
+
+      {/* Investment + payback — co-located so the slider and chart respond together */}
+      <InvestmentForm />
       {investmentDkk > 0 && (
         <PaybackChart
           investmentDkk={investmentDkk}
           annualSavedDkk={simulationResult.summary.annualSavedDkk}
         />
       )}
+
+      {/* Monthly energy overview — useful to everyone, not just power users */}
+      <MonthlyChart hourly={simulationResult.hourly} />
+
       {advanced && (
         <>
           <EnergyFlowChart summary={simulationResult.summary} />
-          <MonthlyChart hourly={simulationResult.hourly} />
           <MonthlySavingsChart hourly={simulationResult.hourly} />
         </>
       )}

@@ -74,3 +74,30 @@ export function pvgisTimeToISO(time: string): string {
   }
   return time
 }
+
+/**
+ * Converts PVGIS time format "YYYYMMDD:HHMM" (UTC) to a Copenhagen
+ * local-time hour string "YYYY-MM-DDTHH" for matching against
+ * Energidataservice HourDK timestamps.
+ *
+ * PVGIS API v5 returns times in UTC. Energidataservice uses Danish local
+ * time (CET = UTC+1 / CEST = UTC+2). Aligning by array index causes a
+ * systematic 1–2 hour shift; this function corrects it.
+ *
+ * Uses Intl.DateTimeFormat so DST transitions are handled automatically.
+ */
+export function pvgisTimeToCopenhagenHour(time: string): string {
+  const datePart = time.slice(0, 8)
+  const hh = time.slice(9, 11)
+  const utcDate = new Date(
+    `${datePart.slice(0, 4)}-${datePart.slice(4, 6)}-${datePart.slice(6, 8)}T${hh}:00:00Z`
+  )
+  const parts = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Copenhagen',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', hour12: false,
+  }).formatToParts(utcDate)
+  const p: Record<string, string> = {}
+  parts.forEach(({ type, value }) => { p[type] = value })
+  return `${p.year}-${p.month}-${p.day}T${p.hour}`
+}

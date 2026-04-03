@@ -18,6 +18,14 @@ export const ELAFGIFT_DKK = 0.699
 export const SYSTEM_TARIFF_DKK = 0.065
 
 /**
+ * Fallback nettarif when DSO-specific lookup fails, excl. VAT.
+ * National average across all DSOs. Combined with ELAFGIFT_DKK and
+ * SYSTEM_TARIFF_DKK gives ~1.40 DKK/kWh incl. VAT:
+ *   (0.355 + 0.699 + 0.065) × 1.25 = 1.399 DKK/kWh
+ */
+export const FALLBACK_NETTARIF_DKK = 0.355
+
+/**
  * Approximate postal code → DSO mapping for major Danish network operators.
  * Covers ~95% of households. Boundaries are simplified — some edge areas
  * (e.g. Vejle/TREFOR, parts of Fyn) may map to the nearest major DSO.

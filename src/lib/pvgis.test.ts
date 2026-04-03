@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { pvgisTimeToISO, fetchPVGISData } from './pvgis'
+import { pvgisTimeToISO, pvgisTimeToCopenhagenHour, fetchPVGISData } from './pvgis'
 import type { SolarConfig } from '@/types'
 
 const COORDS = { lat: 56.15, lon: 10.21 }
@@ -39,6 +39,30 @@ describe('pvgisTimeToISO — real API format "YYYYMMDD:HHMM"', () => {
 
   it('returns input unchanged for unrecognised formats', () => {
     expect(pvgisTimeToISO('unknown')).toBe('unknown')
+  })
+})
+
+// --- pvgisTimeToCopenhagenHour ---
+
+describe('pvgisTimeToCopenhagenHour — UTC → Copenhagen local time', () => {
+  it('adds 1 hour in winter (CET = UTC+1)', () => {
+    // 00:00 UTC Jan 1 = 01:00 CET
+    expect(pvgisTimeToCopenhagenHour('20230101:0000')).toBe('2023-01-01T01')
+  })
+
+  it('adds 2 hours in summer (CEST = UTC+2)', () => {
+    // 10:00 UTC Jun 15 = 12:00 CEST
+    expect(pvgisTimeToCopenhagenHour('20230615:1000')).toBe('2023-06-15T12')
+  })
+
+  it('handles DST spring-forward: UTC 01:00 Mar 26 → 03:00 CEST (02:00 skipped)', () => {
+    // Mar 26 2023: clocks go 02:00 CET → 03:00 CEST at UTC 01:00
+    expect(pvgisTimeToCopenhagenHour('20230326:0100')).toBe('2023-03-26T03')
+  })
+
+  it('handles DST fall-back: UTC 01:00 Oct 29 → 02:00 CET', () => {
+    // Oct 29 2023: clocks go 03:00 CEST → 02:00 CET at UTC 01:00
+    expect(pvgisTimeToCopenhagenHour('20231029:0100')).toBe('2023-10-29T02')
   })
 })
 

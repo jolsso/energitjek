@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
-import { fetchPVGISData, DATA_YEAR } from '@/lib/pvgis'
+import { fetchPVGISData, DATA_YEAR, pvgisTimeToCopenhagenHour } from '@/lib/pvgis'
 import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER, EUR_TO_DKK } from '@/lib/energidataservice'
-import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK } from '@/lib/gridtariff'
+import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK, FALLBACK_NETTARIF_DKK } from '@/lib/gridtariff'
 import { runSimulation, HEATPUMP_ADDON_KWH } from '@/lib/simulation'
 import type { ConsumptionData, HourlyPrice } from '@/types'
 
@@ -66,22 +66,40 @@ export function useSimulation() {
 
       let prices: HourlyPrice[] | undefined
       if (fixedSpotDkk !== null) {
-        // Build flat hourly prices using the user-specified spot price
+        // Build flat hourly prices using the user-specified spot price.
+        // Use Copenhagen local time for each PVGIS hour so tariff24 (indexed
+        // by hour-of-day in local time) is looked up correctly.
         const spotEur = (fixedSpotDkk / EUR_TO_DKK) * 1000  // DKK/kWh → EUR/MWh
-        prices = Array.from({ length: pvgis.hourly.length }, (_, i) => ({
-          hourStart: pvgis.hourly[i].time,
-          spotEur,
-          tariffDkk: tariff24
-            ? (tariff24[i % 24] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
-            : (ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER,
-        }))
+        const fallbackTariff = (FALLBACK_NETTARIF_DKK + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
+        prices = pvgis.hourly.map((row) => {
+          const cphHour = pvgisTimeToCopenhagenHour(row.time)
+          const hourOfDay = parseInt(cphHour.slice(11, 13), 10)
+          return {
+            hourStart: cphHour,
+            spotEur,
+            tariffDkk: tariff24
+              ? (tariff24[hourOfDay] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
+              : fallbackTariff,
+          }
+        })
       } else if (rawPrices) {
-        prices = rawPrices.map((p, i) => ({
-          ...p,
-          tariffDkk: tariff24
-            ? (tariff24[i % 24] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
-            : p.tariffDkk,
-        }))
+        // Join PVGIS production (UTC) with EDS spot prices (HourDK = CET/CEST)
+        // by converting each PVGIS UTC timestamp to Copenhagen local time and
+        // looking up the matching price row. Aligning by array index would cause
+        // a systematic 1–2 hour offset due to timezone differences.
+        const priceByHour = new Map(rawPrices.map(p => [p.hourStart.slice(0, 13), p]))
+        prices = pvgis.hourly.map((row) => {
+          const cphHour = pvgisTimeToCopenhagenHour(row.time)
+          const hourOfDay = parseInt(cphHour.slice(11, 13), 10)
+          const base = priceByHour.get(cphHour)
+          return {
+            hourStart: cphHour,
+            spotEur: base?.spotEur ?? 0,
+            tariffDkk: tariff24
+              ? (tariff24[hourOfDay] + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER
+              : (base?.tariffDkk ?? (FALLBACK_NETTARIF_DKK + ELAFGIFT_DKK + SYSTEM_TARIFF_DKK) * VAT_MULTIPLIER),
+          }
+        })
       }
 
       // Reconstruct gross consumption when the user has existing solar installed.

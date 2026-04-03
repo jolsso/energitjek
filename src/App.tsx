@@ -110,7 +110,7 @@ export default function App() {
             {/* Input forms */}
             <div className="max-w-xl mx-auto space-y-4">
               <AddressForm />
-              <ConsumptionForm />
+              <ConsumptionForm onEloverblikComplete={runSimulation} />
             </div>
 
             {/* Error */}

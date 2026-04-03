@@ -12,7 +12,7 @@ describe('appStore — initial state', () => {
     expect(s.address).toBe('')
     expect(s.postcode).toBe('')
     expect(s.coordinates).toBeNull()
-    expect(s.solarConfig).toEqual({ peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 5 })
+    expect(s.solarConfig).toEqual({ peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 14 })
     expect(s.consumption).toEqual({ source: 'manual', annualKwh: 5000 })
     expect(s.priceArea).toBe('DK2')
     expect(s.investmentDkk).toBe(60000)
@@ -54,7 +54,7 @@ describe('appStore — setters', () => {
     expect(c.peakKw).toBe(10)
     expect(c.tiltDeg).toBe(35)     // unchanged
     expect(c.azimuthDeg).toBe(0)   // unchanged
-    expect(c.systemLossPct).toBe(5) // unchanged
+    expect(c.systemLossPct).toBe(14) // unchanged
   })
 
   it('setSolarConfig handles multiple fields', () => {
@@ -121,7 +121,7 @@ describe('appStore — setters', () => {
   })
 
   it('setExistingSolarConfig stores config', () => {
-    const cfg = { peakKw: 3, tiltDeg: 30, azimuthDeg: 0, systemLossPct: 5 }
+    const cfg = { peakKw: 3, tiltDeg: 30, azimuthDeg: 0, systemLossPct: 14 }
     useAppStore.getState().setExistingSolarConfig(cfg)
     expect(useAppStore.getState().existingSolarConfig).toEqual(cfg)
   })
@@ -153,7 +153,7 @@ describe('appStore — reset', () => {
     store.setEvKmPerDay(80)
     store.setSolarConfig({ peakKw: 12 })
     store.setBatteryConfig({ capacityKwh: 10, maxChargeKw: 5, maxDischargeKw: 5, roundTripEfficiencyPct: 90, strategy: 'self-consumption' })
-    store.setExistingSolarConfig({ peakKw: 3, tiltDeg: 30, azimuthDeg: 0, systemLossPct: 5 })
+    store.setExistingSolarConfig({ peakKw: 3, tiltDeg: 30, azimuthDeg: 0, systemLossPct: 14 })
 
     store.reset()
 
@@ -165,7 +165,7 @@ describe('appStore — reset', () => {
     expect(s.fixedSpotDkk).toBeNull()
     expect(s.heatpumpEnabled).toBe(false)
     expect(s.evKmPerDay).toBeNull()
-    expect(s.solarConfig).toEqual({ peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 5 })
+    expect(s.solarConfig).toEqual({ peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 14 })
     expect(s.batteryConfig).toBeNull()
     expect(s.existingSolarConfig).toBeNull()
     expect(s.pvgisData).toBeNull()

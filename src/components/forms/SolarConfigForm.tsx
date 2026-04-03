@@ -188,7 +188,7 @@ export function SolarConfigForm({ label, advanced = false }: { label?: string; a
             max={30}
             step={1}
             unit="%"
-            description="Inkl. kabelstab, vekselretter, snavs. 5% er typisk for nyt anlæg."
+            description="Inkl. temperatur, kabelstab, vekselretter, snavs og degradering. 14% er PVGIS' realistiske standard."
             onChange={(v) => setSolarConfig({ systemLossPct: v })}
           />
         </>

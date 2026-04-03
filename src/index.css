@@ -5,30 +5,30 @@
 @layer base {
   :root {
     /* Warm off-white canvas */
-    --background: 40 20% 97%;
-    --foreground: 224 32% 12%;
+    --background: 40 30% 96%;
+    --foreground: 224 36% 10%;
 
     /* Cards: pure white for contrast against warm background */
     --card: 0 0% 100%;
-    --card-foreground: 224 32% 12%;
+    --card-foreground: 224 36% 10%;
 
     /* Borders: subtle warm-grey */
-    --border: 220 18% 90%;
-    --input: 220 18% 90%;
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
 
-    /* Primary: amber-gold */
-    --primary: 38 92% 50%;
+    /* Primary: vivid amber-gold */
+    --primary: 36 96% 48%;
     --primary-foreground: 0 0% 100%;
 
     /* Muted surfaces */
-    --secondary: 220 18% 95%;
-    --secondary-foreground: 224 32% 30%;
-    --muted: 220 18% 95%;
-    --muted-foreground: 220 12% 52%;
-    --accent: 220 18% 93%;
-    --accent-foreground: 224 32% 20%;
+    --secondary: 220 18% 94%;
+    --secondary-foreground: 224 32% 28%;
+    --muted: 220 18% 94%;
+    --muted-foreground: 220 14% 50%;
+    --accent: 220 18% 92%;
+    --accent-foreground: 224 32% 18%;
 
-    --ring: 38 92% 50%;
+    --ring: 36 96% 48%;
     --radius: 0.75rem;
   }
 
@@ -39,7 +39,7 @@
     --card-foreground: 210 20% 94%;
     --border: 220 20% 18%;
     --input: 220 20% 18%;
-    --primary: 38 92% 50%;
+    --primary: 36 96% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 20% 16%;
     --secondary-foreground: 210 20% 80%;
@@ -47,7 +47,7 @@
     --muted-foreground: 215 16% 58%;
     --accent: 220 20% 16%;
     --accent-foreground: 210 20% 94%;
-    --ring: 38 92% 50%;
+    --ring: 36 96% 48%;
   }
 }
 
@@ -63,14 +63,25 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(38 96% 60% / 0.12) 0%, transparent 70%);
+    background-attachment: fixed;
   }
 }
 
 @layer utilities {
   .card-shadow {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    box-shadow: 0 1px 4px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.05);
   }
   .card-shadow-md {
-    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.07), 0 2px 4px -1px rgb(0 0 0 / 0.04);
+    box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.09), 0 2px 4px -1px rgb(0 0 0 / 0.05);
+  }
+  .glow-primary {
+    box-shadow: 0 0 24px 0 hsl(36 96% 48% / 0.28), 0 4px 12px 0 rgb(0 0 0 / 0.12);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(36 96% 44%) 0%, hsl(24 96% 52%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

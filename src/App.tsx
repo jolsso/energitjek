@@ -3,24 +3,27 @@ import { ConsumptionForm } from '@/components/forms/ConsumptionForm'
 import { AddressForm } from '@/components/forms/AddressForm'
 import { PricingForm } from '@/components/forms/PricingForm'
 import { SolarConfigForm } from '@/components/forms/SolarConfigForm'
-import { InvestmentForm } from '@/components/forms/InvestmentForm'
 import { BatteryConfigForm } from '@/components/forms/BatteryConfigForm'
 import { ConsumptionAddonsForm } from '@/components/forms/ConsumptionAddonsForm'
 import { ExistingSolarForm } from '@/components/forms/ExistingSolarForm'
-import { EloverblikSetupForm } from '@/components/forms/EloverblikSetupForm'
 import { AddressMap } from '@/components/map/AddressMap'
 import { ResultsPanel } from '@/components/results/ResultsPanel'
 import { Header } from '@/components/layout/Header'
 import { PrivacyPage } from '@/components/PrivacyPage'
+import { MethodologyPage } from '@/components/MethodologyPage'
 import { useSimulation } from '@/hooks/useSimulation'
+import { useTheme } from '@/hooks/useTheme'
 import { useAppStore } from '@/store/appStore'
+import type { Coordinates } from '@/types'
 
-type InputMode = 'eloverblik' | 'manual'
+type Overlay = 'privacy' | 'methodology' | null
 
 export default function App() {
-  const [step, setStep] = useState<'input' | 'results' | 'privacy'>('input')
-  const [inputMode, setInputMode] = useState<InputMode>('eloverblik')
+  useTheme()
+
+  const [overlay, setOverlay] = useState<Overlay>(null)
   const [advanced, setAdvanced] = useState(false)
+
   const { runSimulation, isLoading, error } = useSimulation()
   const reset = useAppStore((s) => s.reset)
   const solarConfig = useAppStore((s) => s.solarConfig)
@@ -31,130 +34,137 @@ export default function App() {
   const consumption = useAppStore((s) => s.consumption)
   const coordinates = useAppStore((s) => s.coordinates)
   const address = useAppStore((s) => s.address)
+  const simulationResult = useAppStore((s) => s.simulationResult)
 
-  // Always keep ref up-to-date so debounced callback never goes stale
+  // Always keep ref up-to-date so debounced callbacks never go stale
   const runSimulationRef = useRef(runSimulation)
   // eslint-disable-next-line react-hooks/refs
   runSimulationRef.current = runSimulation
 
-  const handleCalculate = async () => {
-    const ok = await runSimulation()
-    if (ok) setStep('results')
-  }
+  // Auto-simulate when coordinates first become available (address searched)
+  const prevCoords = useRef<Coordinates | null>(coordinates)
+  useEffect(() => {
+    const prev = prevCoords.current
+    prevCoords.current = coordinates
+    if (prev === null && coordinates !== null && !simulationResult) {
+      runSimulationRef.current()
+    }
+  }, [coordinates, simulationResult])
 
-  // Auto re-simulate when solar config changes while on results page
+  // Auto re-simulate when solar/battery/addon config changes while results exist
   const isInitialMount = useRef(true)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false
       return
     }
-    if (step !== 'results') return
+    if (!simulationResult) return
     const timer = setTimeout(() => { runSimulationRef.current() }, 700)
     return () => clearTimeout(timer)
-  }, [solarConfig, batteryConfig, heatpumpEnabled, evKmPerDay, existingSolarConfig, step])
+  }, [solarConfig, batteryConfig, heatpumpEnabled, evKmPerDay, existingSolarConfig, simulationResult])
+
+  // Privacy / Methodology overlays (full-page, same shell)
+  if (overlay === 'privacy') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header onPrivacy={() => setOverlay(null)} onMethodology={() => setOverlay('methodology')} />
+        <main className="container mx-auto px-4 py-8 max-w-5xl">
+          <PrivacyPage onBack={() => setOverlay(null)} />
+        </main>
+      </div>
+    )
+  }
+  if (overlay === 'methodology') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header onPrivacy={() => setOverlay('privacy')} onMethodology={() => setOverlay(null)} />
+        <main className="container mx-auto px-4 py-8 max-w-5xl">
+          <MethodologyPage onBack={() => setOverlay(null)} />
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onPrivacy={() => setStep('privacy')} />
+      <Header onPrivacy={() => setOverlay('privacy')} onMethodology={() => setOverlay('methodology')} />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {step === 'privacy' ? (
-          <PrivacyPage onBack={() => setStep('input')} />
-        ) : step === 'input' ? (
+
+        {!simulationResult ? (
+
+          /* ── INPUT PHASE ── */
           <div className="space-y-8">
+
             {/* Hero */}
             <div className="text-center space-y-3 mb-8">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground card-shadow mb-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 card-shadow mb-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block animate-pulse" />
                 Gratis · Ingen login · Ingen sporing
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                 Beregn din{' '}
-                <span className="text-primary">solcelleøkonomi</span>
+                <span className="gradient-text">solcelleøkonomi</span>
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto text-base leading-relaxed">
-                Hent alt automatisk via Eloverblik, eller konfigurer selv.
+                Angiv din adresse — se din besparelse med det samme.
               </p>
             </div>
 
-            {/* Mode selector */}
-            <div className="grid grid-cols-2 gap-3 max-w-xl mx-auto">
-              {([
-                {
-                  id: 'eloverblik' as InputMode,
-                  title: 'Via Eloverblik',
-                  badge: 'Anbefalet',
-                  desc: 'Adresse, forbrug og priszone hentes automatisk fra din elmåler.',
-                },
-                {
-                  id: 'manual' as InputMode,
-                  title: 'Manuel',
-                  badge: null,
-                  desc: 'Angiv adresse, forbrug og priszone selv.',
-                },
-              ] as const).map(({ id, title, badge, desc }) => (
-                <button
-                  key={id}
-                  onClick={() => setInputMode(id)}
-                  className={`rounded-xl border p-4 text-left transition-all ${
-                    inputMode === id
-                      ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-border bg-card hover:bg-muted'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-sm">{title}</span>
-                    {badge && (
-                      <span className="rounded-full bg-primary/10 text-primary text-[10px] font-medium px-2 py-0.5">
-                        {badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-snug">{desc}</p>
-                </button>
-              ))}
-            </div>
-
-            {/* Mode content — both always mounted to preserve local state across mode switches */}
-            <div className={inputMode === 'eloverblik' ? 'max-w-xl mx-auto space-y-4' : 'hidden'}>
-              <EloverblikSetupForm />
-            </div>
-            <div className={inputMode === 'manual' ? 'max-w-xl mx-auto space-y-4' : 'hidden'}>
+            {/* Input forms */}
+            <div className="max-w-xl mx-auto space-y-4">
               <AddressForm />
               <ConsumptionForm />
             </div>
 
+            {/* Error */}
             {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+              <div className="max-w-xl mx-auto rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
                 {error}
               </div>
             )}
 
-            <div className="flex items-center justify-center gap-3 pt-2 pb-6">
-              <button
-                onClick={handleCalculate}
-                disabled={isLoading || !coordinates}
-                className="px-10 py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold text-base hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-              >
-                {isLoading ? 'Beregner…' : 'Beregn besparelse'}
-              </button>
-              <button
-                onClick={reset}
-                disabled={isLoading}
-                className="px-5 py-3.5 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Nulstil
-              </button>
-            </div>
+            {/* Loading / CTA */}
+            {isLoading ? (
+              <div className="flex flex-col items-center gap-3 py-8">
+                <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <p className="text-sm text-muted-foreground animate-pulse">Henter soldata og beregner…</p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-3 pt-2 pb-6">
+                <button
+                  onClick={runSimulation}
+                  disabled={isLoading || !coordinates}
+                  className="px-10 py-3.5 text-white rounded-xl font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-0.5 active:translate-y-0"
+                  style={{
+                    background: 'linear-gradient(135deg, hsl(36 96% 48%) 0%, hsl(24 96% 52%) 100%)',
+                    boxShadow: (!isLoading && coordinates)
+                      ? '0 4px 20px 0 hsl(36 96% 48% / 0.45), 0 2px 4px 0 rgb(0 0 0 / 0.1)'
+                      : undefined,
+                  }}
+                >
+                  Beregn besparelse
+                </button>
+                <button
+                  onClick={reset}
+                  disabled={isLoading}
+                  className="px-5 py-3.5 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Nulstil
+                </button>
+              </div>
+            )}
           </div>
+
         ) : (
+
+          /* ── RESULTS PHASE ── */
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <button
-                onClick={() => setStep('input')}
+                onClick={reset}
                 className="text-sm text-muted-foreground hover:text-foreground underline"
               >
-                ← Ret adresse og forbrug
+                ← Ny beregning
               </button>
               <div className="flex items-center gap-3">
                 {isLoading && (
@@ -184,7 +194,7 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 items-start">
-              {/* Sticky left sidebar — map + solar config + investment */}
+              {/* Sticky left sidebar */}
               <div className="space-y-4 lg:sticky lg:top-20 order-2 lg:order-1">
                 {coordinates && (
                   <div className="rounded-xl border border-border bg-card card-shadow overflow-hidden">
@@ -198,12 +208,10 @@ export default function App() {
                     />
                   </div>
                 )}
-
                 <SolarConfigForm
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
                   advanced={advanced}
                 />
-                <InvestmentForm />
                 {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
                 <ConsumptionAddonsForm />
                 <BatteryConfigForm advanced={advanced} />
@@ -216,6 +224,7 @@ export default function App() {
               </div>
             </div>
           </div>
+
         )}
       </main>
     </div>

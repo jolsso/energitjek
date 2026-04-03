@@ -24,6 +24,7 @@ interface AppState {
   evKmPerDay: number | null
   batteryConfig: BatteryConfig | null
   existingSolarConfig: SolarConfig | null
+  theme: 'light' | 'dark' | 'system'
 
   // Fetched data (not persisted — refetched as needed)
   pvgisData: PVGISData | null
@@ -44,6 +45,7 @@ interface AppState {
   setExistingSolarConfig: (config: SolarConfig | null) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
+  setTheme: (theme: 'light' | 'dark' | 'system') => void
   reset: () => void
 }
 
@@ -74,6 +76,7 @@ export const useAppStore = create<AppState>()(
       evKmPerDay: null,
       batteryConfig: null,
       existingSolarConfig: null,
+      theme: 'system',
       pvgisData: null,
       simulationResult: null,
 
@@ -93,6 +96,7 @@ export const useAppStore = create<AppState>()(
       setExistingSolarConfig: (existingSolarConfig) => set({ existingSolarConfig }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
+      setTheme: (theme) => set({ theme }),
       reset: () =>
         set({
           address: '',
@@ -125,6 +129,7 @@ export const useAppStore = create<AppState>()(
         evKmPerDay: s.evKmPerDay,
         batteryConfig: s.batteryConfig,
         existingSolarConfig: s.existingSolarConfig,
+        theme: s.theme,
         consumption: {
           source: s.consumption.source,
           annualKwh: s.consumption.annualKwh,

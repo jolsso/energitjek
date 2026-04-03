@@ -1,15 +1,21 @@
-import { Zap, ShieldCheck, Github } from 'lucide-react'
+import { Zap, ShieldCheck, Github, Calculator, Sun, Moon, Monitor } from 'lucide-react'
+import { useTheme } from '@/hooks/useTheme'
 
 interface Props {
   onPrivacy: () => void
+  onMethodology: () => void
 }
 
-export function Header({ onPrivacy }: Props) {
+export function Header({ onPrivacy, onMethodology }: Props) {
+  const { theme, toggleTheme } = useTheme()
+
+  const themeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-card/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-card/85 backdrop-blur-md" style={{ boxShadow: '0 1px 0 0 hsl(36 96% 48% / 0.15), 0 2px 8px 0 rgb(0 0 0 / 0.06)' }}>
       <div className="container mx-auto px-4 max-w-5xl h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'linear-gradient(135deg, hsl(36 96% 48%) 0%, hsl(24 96% 52%) 100%)', boxShadow: '0 2px 8px 0 hsl(36 96% 48% / 0.4)' }}>
             <Zap className="h-4 w-4 text-white" strokeWidth={2.5} />
           </div>
           <span className="font-semibold text-base tracking-tight">Er du sunshine?</span>
@@ -20,6 +26,14 @@ export function Header({ onPrivacy }: Props) {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 hover:bg-muted rounded-md"
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'} mode`}
+            title={`Current: ${theme} mode. Click to cycle through themes.`}
+          >
+            {themeIcon({ className: 'h-4 w-4' })}
+          </button>
           <a
             href="https://github.com/jolsso/energitjek"
             target="_blank"
@@ -29,6 +43,13 @@ export function Header({ onPrivacy }: Props) {
           >
             <Github className="h-4 w-4" />
           </a>
+          <button
+            onClick={onMethodology}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            Metode
+          </button>
           <button
             onClick={onPrivacy}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"

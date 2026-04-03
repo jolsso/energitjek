@@ -28,7 +28,7 @@ function addressLabel(p: MeteringPoint): string {
 }
 
 export function EloverblikForm() {
-  const { setConsumption } = useAppStore()
+  const { setConsumption, setEloverblikDsoGln } = useAppStore()
   const [token, setToken] = useState(
     () => localStorage.getItem(STORAGE_KEY) ?? import.meta.env.VITE_ELOVERBLIK_TOKEN ?? ''
   )
@@ -88,12 +88,15 @@ export function EloverblikForm() {
   }
 
   const doFetchData = async (dt: string, points: MeteringPoint[], importId: string) => {
+    const importPoint = points.find((p) => p.meteringPointId === importId)
     const exportPoint = findExportPoint(points, importId)
     const exportId = exportPoint?.meteringPointId ?? null
 
     const { importKwh, exportKwh, annualKwh, hasExport } = await fetchHourlyData(dt, importId, exportId, DATA_YEAR)
 
     if (rememberToken) localStorage.setItem(STORAGE_KEY, token.trim())
+
+    setEloverblikDsoGln(importPoint?.gridOperatorGLN ?? null)
 
     setConsumption({
       source: 'eloverblik',
@@ -119,6 +122,7 @@ export function EloverblikForm() {
     setDataToken(null)
     clearTokenCache()
     localStorage.removeItem(STORAGE_KEY)
+    setEloverblikDsoGln(null)
     setConsumption({ source: 'manual', hourlyKwh: undefined, exportKwh: undefined, hasExport: false })
   }
 

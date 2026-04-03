@@ -45,6 +45,11 @@ export function dsoFromPostcode(postcode: string): DSOInfo | null {
   return POSTCODE_DSO_RANGES.find(([from, to]) => num >= from && num <= to)?.[2] ?? null
 }
 
+/** Looks up a DSOInfo by GLN number from the known list. Returns null for unknown GLNs. */
+export function dsoFromGln(glnNumber: string): DSOInfo | null {
+  return POSTCODE_DSO_RANGES.find(([, , dso]) => dso.glnNumber === glnNumber)?.[2] ?? null
+}
+
 /**
  * Fetches current residential grid tariff (Nettarif C) for a DSO.
  * Returns 24 hourly DKK/kWh values (nettarif only, excl. VAT).

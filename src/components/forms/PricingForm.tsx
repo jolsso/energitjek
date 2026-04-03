@@ -1,10 +1,13 @@
 import { Zap, CheckCircle2 } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
-import { dsoFromPostcode } from '@/lib/gridtariff'
+import { dsoFromPostcode, dsoFromGln } from '@/lib/gridtariff'
 
 export function PricingForm() {
-  const { postcode, fixedSpotDkk, setFixedSpotDkk } = useAppStore()
-  const dso = postcode ? dsoFromPostcode(postcode) : null
+  const { postcode, eloverblikDsoGln, fixedSpotDkk, setFixedSpotDkk } = useAppStore()
+  const dso = eloverblikDsoGln
+    ? (dsoFromGln(eloverblikDsoGln) ?? { glnNumber: eloverblikDsoGln, name: `Netselskab (GLN: ${eloverblikDsoGln})` })
+    : (postcode ? dsoFromPostcode(postcode) : null)
+  const dsoSource = eloverblikDsoGln ? 'eloverblik' : 'postcode'
 
   const fixedEnabled = fixedSpotDkk !== null
   const oreValue = fixedEnabled ? Math.round(fixedSpotDkk * 100) : 60
@@ -22,7 +25,7 @@ export function PricingForm() {
           {dso && (
             <span className="inline-flex items-center gap-1 text-xs text-green-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Auto-registreret
+              {dsoSource === 'eloverblik' ? 'Fra Eloverblik' : 'Auto-registreret'}
             </span>
           )}
         </div>
@@ -33,7 +36,9 @@ export function PricingForm() {
         </div>
         {dso && (
           <p className="text-xs text-muted-foreground">
-            Timebaseret nettarif hentes automatisk til simuleringen.
+            {dsoSource === 'eloverblik'
+              ? 'Præcist netselskab hentet fra dit målepunkt.'
+              : 'Timebaseret nettarif hentes automatisk til simuleringen.'}
           </p>
         )}
       </div>

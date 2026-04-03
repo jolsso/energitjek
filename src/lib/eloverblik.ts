@@ -40,6 +40,7 @@ export interface MeteringPoint {
   postcode?: string
   cityName?: string
   parentMeteringPointId?: string
+  gridOperatorGLN?: string
 }
 
 /**
@@ -64,6 +65,7 @@ export async function fetchAllMeteringPoints(dataToken: string): Promise<Meterin
     postcode: p['postcode'] as string | undefined,
     cityName: p['cityName'] as string | undefined,
     parentMeteringPointId: (p['parentMeteringPoint'] as Record<string, string> | undefined)?.meteringPointId,
+    gridOperatorGLN: p['gridOperatorGLN'] as string | undefined,
   }))
 }
 

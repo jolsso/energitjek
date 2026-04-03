@@ -13,6 +13,7 @@ export function useSimulation() {
   const {
     coordinates,
     postcode,
+    eloverblikDsoGln,
     solarConfig,
     consumption,
     priceArea,
@@ -35,7 +36,9 @@ export function useSimulation() {
     setError(null)
 
     try {
-      const dso = dsoFromPostcode(postcode)
+      const dso = eloverblikDsoGln
+        ? { glnNumber: eloverblikDsoGln, name: 'Netselskab (fra Eloverblik)' }
+        : dsoFromPostcode(postcode)
 
       const [pvgis, pvgisExisting, rawPrices, tariff24, co2Factors] = await Promise.all([
         fetchPVGISData(coordinates, solarConfig),

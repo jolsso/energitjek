@@ -12,12 +12,15 @@ import { Header } from '@/components/layout/Header'
 import { PrivacyPage } from '@/components/PrivacyPage'
 import { MethodologyPage } from '@/components/MethodologyPage'
 import { useSimulation } from '@/hooks/useSimulation'
+import { useTheme } from '@/hooks/useTheme'
 import { useAppStore } from '@/store/appStore'
 import type { Coordinates } from '@/types'
 
 type Overlay = 'privacy' | 'methodology' | null
 
 export default function App() {
+  useTheme()
+
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [advanced, setAdvanced] = useState(false)
 

@@ -24,7 +24,7 @@ function azimuthShort(deg: number): string {
 }
 
 export function ResultsPanel({ advanced = false }: { advanced?: boolean }) {
-  const { simulationResult, pvgisData, investmentDkk, solarConfig, address, consumption } = useAppStore()
+  const { simulationResult, investmentDkk, solarConfig, address, consumption } = useAppStore()
   const { runSimulation } = useSimulation()
   const [eloverblikOpen, setEloverblikOpen] = useState(false)
 

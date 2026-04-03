@@ -88,6 +88,13 @@ beforeEach(() => {
 beforeEach(async () => {
   const pvgisMod = await import('@/lib/pvgis')
   ;(pvgisMod as unknown as Record<string, unknown>).DATA_YEAR = 2023
+  // Provide a real stub: PVGIS UTC "20230101:HHMM" → CET "2023-01-01T(HH+1)"
+  // All test PVGIS times are in January (CET = UTC+1, no DST)
+  ;(pvgisMod as unknown as Record<string, unknown>).pvgisTimeToCopenhagenHour =
+    (time: string) => {
+      const hh = parseInt(time.slice(9, 11), 10)
+      return `2023-01-01T${String((hh + 1) % 24).padStart(2, '0')}`
+    }
 
   const edsMod = await import('@/lib/energidataservice')
   ;(edsMod as unknown as Record<string, unknown>).VAT_MULTIPLIER = 1.25
@@ -258,7 +265,8 @@ describe('useSimulation — fixed spot price', () => {
   })
 
   it('uses hourly prices from fetchSpotPrices when fixedSpotDkk is null', async () => {
-    const mockPrices = [{ hourStart: '2023-01-01T00:00:00Z', spotEur: 50, tariffDkk: 2.5 }]
+    // HourDK is CET. PVGIS UTC 00:00 → CET 01:00, so mock price must be at T01
+    const mockPrices = [{ hourStart: '2023-01-01T01:00:00', spotEur: 50, tariffDkk: 2.5 }]
     vi.mocked(fetchSpotPrices).mockResolvedValue(mockPrices)
     vi.mocked(useAppStore).mockReturnValue({
       ...DEFAULT_STORE,

@@ -21,7 +21,7 @@ const SERVICES = [
     domain: 're.jrc.ec.europa.eu',
     sends: 'Koordinater + anlægsdata',
     receives: 'Timebaseret solproduktion',
-    note: 'Anmodningen går via en Vercel-proxy-funktion for at omgå browser-CORS-begrænsninger.',
+    note: 'Anmodningen går via en Vercel-proxy-funktion for at omgå browser-CORS-begrænsninger. Svaret caches i Vercels CDN i op til 7 dage, nøglet på koordinater og anlægsparametre — ingen persondata.',
     optional: false,
     via: 'proxy',
   },
@@ -87,7 +87,7 @@ export function PrivacyPage({ onBack }: Props) {
           Privatliv & datasikkerhed
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed">
-          Er du sunshine? er bygget på et enkelt princip: al beregning sker i din browser. Sitet hostes på Vercel og bruger to proxy-funktioner til at videresende API-kald — ingen data behandles eller gemmes på serversiden. Nedenfor kan du se præcist, hvilke eksterne tjenester din browser taler med — og hvad der sendes.
+          Er du sunshine? er bygget på et enkelt princip: al beregning sker i din browser. Sitet hostes på Vercel og bruger to proxy-funktioner til at videresende API-kald. PVGIS-svar caches kortvarigt i Vercels CDN (op til 7 dage) for at reducere belastningen — ingen persondata gemmes. Nedenfor kan du se præcist, hvilke eksterne tjenester din browser taler med — og hvad der sendes.
         </p>
       </div>
 

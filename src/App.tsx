@@ -48,6 +48,10 @@ export default function App() {
     }
   }, [coordinates, simulationResult])
 
+  // Track simulationResult in a ref so we can guard without it being a reactive dependency
+  const simulationResultRef = useRef(simulationResult)
+  simulationResultRef.current = simulationResult
+
   // Auto re-simulate when solar/battery/addon config changes while results exist
   const isInitialMount = useRef(true)
   useEffect(() => {
@@ -55,10 +59,10 @@ export default function App() {
       isInitialMount.current = false
       return
     }
-    if (!simulationResult) return
+    if (!simulationResultRef.current) return
     const timer = setTimeout(() => { runSimulationRef.current() }, 700)
     return () => clearTimeout(timer)
-  }, [solarConfig, batteryConfig, heatpumpEnabled, evKmPerDay, existingSolarConfig, simulationResult])
+  }, [solarConfig, batteryConfig, heatpumpEnabled, evKmPerDay, existingSolarConfig])
 
   // Privacy / Methodology overlays (full-page, same shell)
   if (overlay === 'privacy') {

@@ -1,5 +1,6 @@
 import { Sun } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
+import { SizeOptimizerPanel } from './SizeOptimizerPanel'
 
 interface SliderFieldProps {
   label: string
@@ -144,6 +145,8 @@ export function SolarConfigForm({ label, advanced = false }: { label?: string; a
         description="Samlet toppeffekt for dit anlæg"
         onChange={(v) => setSolarConfig({ peakKw: v })}
       />
+
+      <SizeOptimizerPanel />
 
       {advanced && (
         <>

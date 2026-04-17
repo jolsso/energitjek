@@ -24,6 +24,7 @@ export function useSimulation() {
     existingSolarConfig,
     setPVGISData,
     setSimulationResult,
+    setHourlyPrices,
   } = useAppStore()
 
   const run = async (): Promise<boolean> => {
@@ -66,6 +67,7 @@ export function useSimulation() {
       ])
 
       setPVGISData(pvgis)
+      setHourlyPrices(null)  // reset until prices are built below
 
       let prices: HourlyPrice[] | undefined
       if (fixedSpotDkk !== null) {
@@ -132,6 +134,8 @@ export function useSimulation() {
           hourlyKwh: grossHourly,
         }
       }
+
+      setHourlyPrices(prices ?? null)
 
       const result = runSimulation(
         pvgis,

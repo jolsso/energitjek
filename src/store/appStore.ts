@@ -5,6 +5,7 @@ import type {
   Coordinates,
   SolarConfig,
   ConsumptionData,
+  HourlyPrice,
   PVGISData,
   SimulationResult,
 } from '@/types'
@@ -29,6 +30,7 @@ interface AppState {
   // Fetched data (not persisted — refetched as needed)
   pvgisData: PVGISData | null
   simulationResult: SimulationResult | null
+  hourlyPrices: HourlyPrice[] | null
   eloverblikDsoGln: string | null
 
   // Actions
@@ -46,6 +48,7 @@ interface AppState {
   setExistingSolarConfig: (config: SolarConfig | null) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
+  setHourlyPrices: (prices: HourlyPrice[] | null) => void
   setEloverblikDsoGln: (gln: string | null) => void
   setTheme: (theme: 'light' | 'dark' | 'system') => void
   reset: () => void
@@ -81,6 +84,7 @@ export const useAppStore = create<AppState>()(
       theme: 'system',
       pvgisData: null,
       simulationResult: null,
+      hourlyPrices: null,
       eloverblikDsoGln: null,
 
       setAddress: (address) => set({ address }),
@@ -99,6 +103,7 @@ export const useAppStore = create<AppState>()(
       setExistingSolarConfig: (existingSolarConfig) => set({ existingSolarConfig }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
+      setHourlyPrices: (hourlyPrices) => set({ hourlyPrices }),
       setEloverblikDsoGln: (eloverblikDsoGln) => set({ eloverblikDsoGln }),
       setTheme: (theme) => set({ theme }),
       reset: () =>
@@ -117,6 +122,7 @@ export const useAppStore = create<AppState>()(
           existingSolarConfig: null,
           pvgisData: null,
           simulationResult: null,
+          hourlyPrices: null,
           eloverblikDsoGln: null,
         }),
     }),

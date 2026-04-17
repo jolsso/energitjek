@@ -66,6 +66,7 @@ const DEFAULT_STORE = {
   existingSolarConfig: null,
   setPVGISData: vi.fn(),
   setSimulationResult: vi.fn(),
+  setHourlyPrices: vi.fn(),
 }
 
 beforeEach(() => {

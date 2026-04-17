@@ -28,6 +28,7 @@ export default function App() {
   const heatpumpEnabled = useAppStore((s) => s.heatpumpEnabled)
   const evKmPerDay = useAppStore((s) => s.evKmPerDay)
   const existingSolarConfig = useAppStore((s) => s.existingSolarConfig)
+  const dataYear = useAppStore((s) => s.dataYear)
   const consumption = useAppStore((s) => s.consumption)
   const coordinates = useAppStore((s) => s.coordinates)
   const address = useAppStore((s) => s.address)
@@ -62,7 +63,7 @@ export default function App() {
     if (!simulationResultRef.current) return
     const timer = setTimeout(() => { runSimulationRef.current() }, 700)
     return () => clearTimeout(timer)
-  }, [solarConfig, batteryConfig, heatpumpEnabled, evKmPerDay, existingSolarConfig])
+  }, [solarConfig, batteryConfig, heatpumpEnabled, evKmPerDay, existingSolarConfig, dataYear])
 
   // Privacy / Methodology overlays (full-page, same shell)
   if (overlay === 'privacy') {

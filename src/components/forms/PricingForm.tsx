@@ -1,9 +1,15 @@
 import { Zap, CheckCircle2 } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { dsoFromPostcode, dsoFromGln } from '@/lib/gridtariff'
+import { PVGIS_MIN_YEAR, PVGIS_MAX_YEAR } from '@/lib/pvgis'
+
+const AVAILABLE_YEARS = Array.from(
+  { length: PVGIS_MAX_YEAR - PVGIS_MIN_YEAR + 1 },
+  (_, i) => PVGIS_MAX_YEAR - i,
+)
 
 export function PricingForm() {
-  const { postcode, eloverblikDsoGln, fixedSpotDkk, setFixedSpotDkk } = useAppStore()
+  const { postcode, eloverblikDsoGln, fixedSpotDkk, setFixedSpotDkk, dataYear, setDataYear } = useAppStore()
   const dso = eloverblikDsoGln
     ? (dsoFromGln(eloverblikDsoGln) ?? { glnNumber: eloverblikDsoGln, name: `Netselskab (GLN: ${eloverblikDsoGln})` })
     : (postcode ? dsoFromPostcode(postcode) : null)
@@ -41,6 +47,22 @@ export function PricingForm() {
               : 'Timebaseret nettarif hentes automatisk til simuleringen.'}
           </p>
         )}
+      </div>
+
+      <div className="space-y-1.5 border-t border-border pt-3">
+        <label className="text-xs font-medium text-muted-foreground">Dataår</label>
+        <select
+          value={dataYear}
+          onChange={(e) => setDataYear(Number(e.target.value))}
+          className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm"
+        >
+          {AVAILABLE_YEARS.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Soldata (PVGIS), spotpriser og CO₂-faktorer for det valgte år.
+        </p>
       </div>
 
       <div className="space-y-3 border-t border-border pt-3">

@@ -64,8 +64,10 @@ const DEFAULT_STORE = {
   evKmPerDay: null,
   batteryConfig: null,
   existingSolarConfig: null,
+  dataYear: 2023,
   setPVGISData: vi.fn(),
   setSimulationResult: vi.fn(),
+  setHourlyPrices: vi.fn(),
 }
 
 beforeEach(() => {
@@ -159,6 +161,7 @@ describe('useSimulation — basic happy path', () => {
     expect(fetchPVGISData).toHaveBeenCalledWith(
       DEFAULT_STORE.coordinates,
       solarConfig,
+      DEFAULT_STORE.dataYear,
     )
   })
 

@@ -5,6 +5,7 @@ import type {
   Coordinates,
   SolarConfig,
   ConsumptionData,
+  HourlyPrice,
   PVGISData,
   SimulationResult,
 } from '@/types'
@@ -24,11 +25,13 @@ interface AppState {
   evKmPerDay: number | null
   batteryConfig: BatteryConfig | null
   existingSolarConfig: SolarConfig | null
+  dataYear: number
   theme: 'light' | 'dark' | 'system'
 
   // Fetched data (not persisted — refetched as needed)
   pvgisData: PVGISData | null
   simulationResult: SimulationResult | null
+  hourlyPrices: HourlyPrice[] | null
   eloverblikDsoGln: string | null
 
   // Actions
@@ -43,9 +46,11 @@ interface AppState {
   setHeatpumpEnabled: (enabled: boolean) => void
   setEvKmPerDay: (km: number | null) => void
   setBatteryConfig: (config: BatteryConfig | null) => void
+  setDataYear: (year: number) => void
   setExistingSolarConfig: (config: SolarConfig | null) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
+  setHourlyPrices: (prices: HourlyPrice[] | null) => void
   setEloverblikDsoGln: (gln: string | null) => void
   setTheme: (theme: 'light' | 'dark' | 'system') => void
   reset: () => void
@@ -78,9 +83,11 @@ export const useAppStore = create<AppState>()(
       evKmPerDay: null,
       batteryConfig: null,
       existingSolarConfig: null,
+      dataYear: 2023,
       theme: 'system',
       pvgisData: null,
       simulationResult: null,
+      hourlyPrices: null,
       eloverblikDsoGln: null,
 
       setAddress: (address) => set({ address }),
@@ -96,9 +103,11 @@ export const useAppStore = create<AppState>()(
       setHeatpumpEnabled: (heatpumpEnabled) => set({ heatpumpEnabled }),
       setEvKmPerDay: (evKmPerDay) => set({ evKmPerDay }),
       setBatteryConfig: (batteryConfig) => set({ batteryConfig }),
+      setDataYear: (dataYear) => set({ dataYear }),
       setExistingSolarConfig: (existingSolarConfig) => set({ existingSolarConfig }),
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
+      setHourlyPrices: (hourlyPrices) => set({ hourlyPrices }),
       setEloverblikDsoGln: (eloverblikDsoGln) => set({ eloverblikDsoGln }),
       setTheme: (theme) => set({ theme }),
       reset: () =>
@@ -115,8 +124,10 @@ export const useAppStore = create<AppState>()(
           evKmPerDay: null,
           batteryConfig: null,
           existingSolarConfig: null,
+          dataYear: 2023,
           pvgisData: null,
           simulationResult: null,
+          hourlyPrices: null,
           eloverblikDsoGln: null,
         }),
     }),
@@ -134,6 +145,7 @@ export const useAppStore = create<AppState>()(
         evKmPerDay: s.evKmPerDay,
         batteryConfig: s.batteryConfig,
         existingSolarConfig: s.existingSolarConfig,
+        dataYear: s.dataYear,
         theme: s.theme,
         consumption: {
           source: s.consumption.source,

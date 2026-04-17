@@ -243,7 +243,7 @@ export function EloverblikForm() {
               <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-medium text-green-800">
-                  Forbrugsdata hentet ({DATA_YEAR})
+                  Forbrugsdata hentet ({dataYear})
                 </p>
                 <p className="text-xs text-green-700">
                   {fetchedKwh.toLocaleString('da-DK')} kWh · timebaseret profil

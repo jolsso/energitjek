@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
-import { fetchPVGISData, DATA_YEAR, pvgisTimeToCopenhagenHour } from '@/lib/pvgis'
+import { fetchPVGISData, pvgisTimeToCopenhagenHour } from '@/lib/pvgis'
 import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER, EUR_TO_DKK } from '@/lib/energidataservice'
 import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK, FALLBACK_NETTARIF_DKK } from '@/lib/gridtariff'
 import { runSimulation, HEATPUMP_ADDON_KWH } from '@/lib/simulation'
@@ -22,6 +22,7 @@ export function useSimulation() {
     evKmPerDay,
     batteryConfig,
     existingSolarConfig,
+    dataYear,
     setPVGISData,
     setSimulationResult,
     setHourlyPrices,
@@ -42,14 +43,14 @@ export function useSimulation() {
         : dsoFromPostcode(postcode)
 
       const [pvgis, pvgisExisting, rawPrices, tariff24, co2Factors] = await Promise.all([
-        fetchPVGISData(coordinates, solarConfig),
+        fetchPVGISData(coordinates, solarConfig, dataYear),
         // Fetch existing system PVGIS in parallel when user has solar already installed
         existingSolarConfig && consumption.hasExport
-          ? fetchPVGISData(coordinates, existingSolarConfig)
+          ? fetchPVGISData(coordinates, existingSolarConfig, dataYear)
           : Promise.resolve(null),
         // Skip spot price fetch when user has set a fixed spot price
         fixedSpotDkk === null
-          ? fetchSpotPrices(DATA_YEAR, priceArea).catch((err) => {
+          ? fetchSpotPrices(dataYear, priceArea).catch((err) => {
               console.warn('Spotpriser ikke tilgængelige — bruger faste priser.', err)
               return null
             })
@@ -60,7 +61,7 @@ export function useSimulation() {
               return null
             })
           : Promise.resolve(null),
-        fetchCO2Emissions(DATA_YEAR, priceArea).catch((err) => {
+        fetchCO2Emissions(dataYear, priceArea).catch((err) => {
           console.warn('CO2-emissionsdata ikke tilgængelig — bruger fast faktor.', err)
           return null
         }),

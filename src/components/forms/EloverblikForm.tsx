@@ -9,7 +9,6 @@ import {
   clearTokenCache,
   type MeteringPoint,
 } from '@/lib/eloverblik'
-import { DATA_YEAR } from '@/lib/pvgis'
 
 const STORAGE_KEY = 'energitjek-eloverblik-token'
 
@@ -28,7 +27,7 @@ function addressLabel(p: MeteringPoint): string {
 }
 
 export function EloverblikForm() {
-  const { setConsumption, setEloverblikDsoGln } = useAppStore()
+  const { setConsumption, setEloverblikDsoGln, dataYear } = useAppStore()
   const [token, setToken] = useState(
     () => localStorage.getItem(STORAGE_KEY) ?? import.meta.env.VITE_ELOVERBLIK_TOKEN ?? ''
   )
@@ -92,7 +91,7 @@ export function EloverblikForm() {
     const exportPoint = findExportPoint(points, importId)
     const exportId = exportPoint?.meteringPointId ?? null
 
-    const { importKwh, exportKwh, annualKwh, hasExport } = await fetchHourlyData(dt, importId, exportId, DATA_YEAR)
+    const { importKwh, exportKwh, annualKwh, hasExport } = await fetchHourlyData(dt, importId, exportId, dataYear)
 
     if (rememberToken) localStorage.setItem(STORAGE_KEY, token.trim())
 

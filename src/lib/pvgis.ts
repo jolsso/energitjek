@@ -5,8 +5,12 @@ import type { Coordinates, PVGISData, SolarConfig } from '@/types'
 // PVGIS does not send CORS headers so direct browser requests are blocked.
 const PVGIS_BASE = '/api/pvgis'
 
-// Most recent year with confirmed full data in PVGIS
-export const DATA_YEAR = 2023
+// Confirmed data range in PVGIS ERA5
+export const PVGIS_MIN_YEAR = 2016
+export const PVGIS_MAX_YEAR = 2023
+
+/** @deprecated Use PVGIS_MAX_YEAR for the default year */
+export const DATA_YEAR = PVGIS_MAX_YEAR
 
 /**
  * Fetches hourly PV production data for a single year from PVGIS (EU Commission).
@@ -18,6 +22,7 @@ export const DATA_YEAR = 2023
 export async function fetchPVGISData(
   coords: Coordinates,
   config: SolarConfig,
+  year: number = DATA_YEAR,
 ): Promise<PVGISData> {
   const params = new URLSearchParams({
     lat: coords.lat.toString(),
@@ -26,8 +31,8 @@ export async function fetchPVGISData(
     loss: config.systemLossPct.toString(),
     angle: config.tiltDeg.toString(),
     aspect: config.azimuthDeg.toString(),
-    startyear: DATA_YEAR.toString(),
-    endyear: DATA_YEAR.toString(),
+    startyear: year.toString(),
+    endyear: year.toString(),
     outputformat: 'json',
     browser: '1',
     usehorizon: '1',

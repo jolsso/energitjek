@@ -1,0 +1,136 @@
+interface SliderFieldProps {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  unit: string
+  description?: string
+  onChange: (v: number) => void
+  children?: React.ReactNode
+}
+
+export function SliderField({ label, value, min, max, step, unit, description, onChange, children }: SliderFieldProps) {
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-sm">
+        <label className="font-medium">{label}</label>
+        <span className="text-muted-foreground">{value} {unit}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full accent-primary"
+      />
+      {children}
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
+    </div>
+  )
+}
+
+export function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
+  const rad = (tiltDeg * Math.PI) / 180
+  // Panel: pivot at bottom-left corner, rotates upward to the right
+  const px = 90, py = 130  // pivot point (bottom-left of panel)
+  const panelW = 150, panelH = 10
+
+  // Angle arc
+  const arcR = 38
+  const arcEndX = px + arcR * Math.cos(rad)
+  const arcEndY = py - arcR * Math.sin(rad)
+
+  // Label at midpoint of arc
+  const labelR = arcR + 18
+  const labelX = px + labelR * Math.cos(rad / 2)
+  const labelY = py - labelR * Math.sin(rad / 2)
+
+  // Cell divider positions (5 dividers = 6 cells)
+  const cellDividers = [1, 2, 3, 4, 5]
+
+  return (
+    <svg viewBox="0 0 320 145" className="w-full h-28 mt-1">
+      {/* Ground line */}
+      <line
+        x1="0" y1={py + 3} x2="320" y2={py + 3}
+        style={{ stroke: 'hsl(var(--border))' }} strokeWidth="1.5"
+      />
+
+      {/* Sun — fixed upper-left */}
+      <circle cx="38" cy="22" r="18"
+        style={{ fill: 'hsl(var(--primary))' }} opacity="0.12" />
+      <circle cx="38" cy="22" r="10"
+        style={{ fill: 'hsl(var(--primary))' }} opacity="0.9" />
+
+      {/* Angle arc */}
+      {tiltDeg > 2 && (
+        <path
+          d={`M ${px + arcR} ${py} A ${arcR} ${arcR} 0 0 0 ${arcEndX} ${arcEndY}`}
+          fill="none"
+          style={{ stroke: 'hsl(var(--primary))' }}
+          strokeWidth="1.5"
+          opacity="0.45"
+        />
+      )}
+
+      {/* Angle label */}
+      {tiltDeg > 6 && (
+        <text
+          x={labelX} y={labelY}
+          fontSize="13"
+          style={{ fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter, system-ui, sans-serif' }}
+          textAnchor="middle" dominantBaseline="middle"
+        >
+          {tiltDeg}°
+        </text>
+      )}
+
+      {/* Solar panel — rotated rectangle around pivot */}
+      <g transform={`rotate(${-tiltDeg} ${px} ${py})`}>
+        {/* Panel body */}
+        <rect
+          x={px} y={py - panelH} width={panelW} height={panelH} rx="2.5"
+          fill="#1e3a5f"
+        />
+        {/* Subtle cell grid */}
+        {cellDividers.map(i => (
+          <line
+            key={i}
+            x1={px + (panelW / 6) * i} y1={py - panelH}
+            x2={px + (panelW / 6) * i} y2={py}
+            stroke="#60a5fa" strokeWidth="0.7" opacity="0.3"
+          />
+        ))}
+        {/* Top-edge highlight */}
+        <line
+          x1={px + 3} y1={py - panelH + 1.5} x2={px + panelW - 3} y2={py - panelH + 1.5}
+          stroke="#93c5fd" strokeWidth="1" opacity="0.25" strokeLinecap="round"
+        />
+      </g>
+
+      {/* Pivot dot */}
+      <circle cx={px} cy={py} r="3"
+        style={{ fill: 'hsl(var(--muted-foreground))' }} opacity="0.4"
+      />
+    </svg>
+  )
+}
+
+export function azimuthLabel(deg: number): string {
+  const d = ((deg % 360) + 360) % 360  // normalise to 0–360 for lookup
+  const normalised = d > 180 ? d - 360 : d  // back to -180..180
+  if (normalised <= -157) return 'Nord'
+  if (normalised <= -112) return 'Nord-øst'
+  if (normalised <= -67)  return 'Øst'
+  if (normalised <= -22)  return 'Øst-syd'
+  if (normalised <= 22)   return 'Syd'
+  if (normalised <= 67)   return 'Syd-vest'
+  if (normalised <= 112)  return 'Vest'
+  if (normalised <= 157)  return 'Nord-vest'
+  return 'Nord'
+}

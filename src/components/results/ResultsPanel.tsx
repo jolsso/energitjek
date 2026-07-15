@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, Zap } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
+import { getSegmentPeakKw } from '@/lib/roofCapacity'
 import { useSimulation } from '@/hooks/useSimulation'
 import { SummaryCards } from './SummaryCards'
 import { EnergyFlowChart } from './EnergyFlowChart'
@@ -33,7 +34,10 @@ export function ResultsPanel({ advanced = false }: { advanced?: boolean }) {
   // Derive data year from first hourly entry (format: "2023-01-01T…")
   const dataYear = simulationResult.hourly[0]?.hourStart.slice(0, 4) ?? null
 
-  const systemDesc = `${solarConfig.peakKw} kWp · ${azimuthShort(solarConfig.azimuthDeg)} · ${solarConfig.tiltDeg}° hældning`
+  const segments = solarConfig.segments
+  const systemDesc = segments.length > 1
+    ? `${segments.reduce((sum, seg) => sum + getSegmentPeakKw(seg), 0).toFixed(1)} kWp samlet · ${segments.length} tag-flader`
+    : `${getSegmentPeakKw(segments[0])} kWp · ${azimuthShort(segments[0].azimuthDeg)} · ${segments[0].tiltDeg}° hældning`
   const shortAddress = address.split(',')[0]?.trim()
 
   return (

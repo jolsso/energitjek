@@ -19,7 +19,7 @@ vi.mock('@/lib/simulation')
 // --- Imports after mocks ---
 
 import { useAppStore } from '@/store/appStore'
-import { fetchPVGISData } from '@/lib/pvgis'
+import { fetchPVGISDataForSegments } from '@/lib/pvgis'
 import { fetchSpotPrices, fetchCO2Emissions } from '@/lib/energidataservice'
 import { fetchGridTariff, dsoFromPostcode } from '@/lib/gridtariff'
 import { runSimulation } from '@/lib/simulation'
@@ -53,10 +53,15 @@ const MOCK_RESULT: SimulationResult = {
   },
 }
 
+const DEFAULT_SOLAR_CONFIG = {
+  systemLossPct: 5,
+  segments: [{ id: 's1', inputMode: 'capacity' as const, peakKw: 6, tiltDeg: 35, azimuthDeg: 0 }],
+}
+
 const DEFAULT_STORE = {
   coordinates: { lat: 56.15, lon: 10.20 },
   postcode: '2100',
-  solarConfig: { peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 5 },
+  solarConfig: DEFAULT_SOLAR_CONFIG,
   consumption: { source: 'manual' as const, annualKwh: 5000 },
   priceArea: 'DK2' as const,
   fixedSpotDkk: null,
@@ -77,7 +82,7 @@ beforeEach(() => {
   vi.mocked(useAppStore).mockReturnValue({ ...DEFAULT_STORE, setPVGISData: vi.fn(), setSimulationResult: vi.fn() })
 
   // API defaults
-  vi.mocked(fetchPVGISData).mockResolvedValue(makePVGIS())
+  vi.mocked(fetchPVGISDataForSegments).mockResolvedValue(makePVGIS())
   vi.mocked(fetchSpotPrices).mockResolvedValue([])
   vi.mocked(fetchCO2Emissions).mockRejectedValue(new Error('mocked'))
   vi.mocked(fetchGridTariff).mockRejectedValue(new Error('mocked'))
@@ -125,7 +130,7 @@ describe('useSimulation — missing coordinates', () => {
     const ok = await run()
 
     expect(ok).toBe(false)
-    expect(fetchPVGISData).not.toHaveBeenCalled()
+    expect(fetchPVGISDataForSegments).not.toHaveBeenCalled()
     expect(runSimulation).not.toHaveBeenCalled()
   })
 })
@@ -146,8 +151,11 @@ describe('useSimulation — basic happy path', () => {
     expect(setSimulationResult).toHaveBeenCalledWith(MOCK_RESULT)
   })
 
-  it('fetches PVGIS with the configured solar system', async () => {
-    const solarConfig = { peakKw: 10, tiltDeg: 30, azimuthDeg: 45, systemLossPct: 8 }
+  it('fetches PVGIS with the configured solar segments', async () => {
+    const solarConfig = {
+      systemLossPct: 8,
+      segments: [{ id: 's1', inputMode: 'capacity' as const, peakKw: 10, tiltDeg: 30, azimuthDeg: 45 }],
+    }
     vi.mocked(useAppStore).mockReturnValue({
       ...DEFAULT_STORE,
       solarConfig,
@@ -158,9 +166,10 @@ describe('useSimulation — basic happy path', () => {
     const { runSimulation: run } = useSimulation()
     await run()
 
-    expect(fetchPVGISData).toHaveBeenCalledWith(
+    expect(fetchPVGISDataForSegments).toHaveBeenCalledWith(
       DEFAULT_STORE.coordinates,
-      solarConfig,
+      solarConfig.segments,
+      solarConfig.systemLossPct,
       DEFAULT_STORE.dataYear,
     )
   })
@@ -245,7 +254,7 @@ describe('useSimulation — fixed spot price', () => {
     const EUR_TO_DKK = 7.46
     const fixedSpotDkk = 0.60  // DKK/kWh
     const pvgis = makePVGIS(1000, 24)
-    vi.mocked(fetchPVGISData).mockResolvedValue(pvgis)
+    vi.mocked(fetchPVGISDataForSegments).mockResolvedValue(pvgis)
     vi.mocked(useAppStore).mockReturnValue({
       ...DEFAULT_STORE,
       fixedSpotDkk,
@@ -297,12 +306,15 @@ describe('useSimulation — gross consumption reconstruction', () => {
     const pvgisNew      = makePVGIS(1000, 3)
     const pvgisExisting = makePVGIS(existingWatts, 3)
 
-    // fetchPVGISData called twice: first for new system, second for existing
-    vi.mocked(fetchPVGISData)
+    // fetchPVGISDataForSegments called twice: first for new system, second for existing
+    vi.mocked(fetchPVGISDataForSegments)
       .mockResolvedValueOnce(pvgisNew)
       .mockResolvedValueOnce(pvgisExisting)
 
-    const existingSolarConfig = { peakKw: 3, tiltDeg: 30, azimuthDeg: 0, systemLossPct: 5 }
+    const existingSolarConfig = {
+      systemLossPct: 5,
+      segments: [{ id: 'e1', inputMode: 'capacity' as const, peakKw: 3, tiltDeg: 30, azimuthDeg: 0 }],
+    }
     vi.mocked(useAppStore).mockReturnValue({
       ...DEFAULT_STORE,
       existingSolarConfig,
@@ -349,8 +361,8 @@ describe('useSimulation — gross consumption reconstruction', () => {
     const { runSimulation: run } = useSimulation()
     await run()
 
-    // Only one fetchPVGISData call (no existing system fetch)
-    expect(fetchPVGISData).toHaveBeenCalledTimes(1)
+    // Only one fetchPVGISDataForSegments call (no existing system fetch)
+    expect(fetchPVGISDataForSegments).toHaveBeenCalledTimes(1)
     const effectiveConsumption = vi.mocked(runSimulation).mock.calls[0]?.[1]
     expect(effectiveConsumption?.hourlyKwh).toEqual([1, 2, 3])
   })

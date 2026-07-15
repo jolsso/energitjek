@@ -1,9 +1,28 @@
 // --- Solar system configuration ---
+export type SegmentInputMode = 'capacity' | 'dimensions'
+
+/**
+ * One roof face / segment of a PV system (e.g. an east-facing and a
+ * west-facing half of a split roof). PVGIS is queried per segment and the
+ * hourly production arrays are summed — see fetchPVGISDataForSegments.
+ */
+export interface RoofSegment {
+  id: string
+  inputMode: SegmentInputMode
+  tiltDeg: number         // Panel tilt angle (0 = flat, 90 = vertical)
+  azimuthDeg: number      // Azimuth (0 = south, -90 = east, 90 = west)
+  peakKw: number          // Installed peak capacity in kWp — used when inputMode === 'capacity'
+  // Dimensions mode — capacity is derived, see getSegmentPeakKw()
+  roofWidthM?: number
+  roofHeightM?: number
+  panelWattage?: number   // Wp per panel; defaults to DEFAULT_PANEL.wattage
+  panelWidthM?: number
+  panelHeightM?: number
+}
+
 export interface SolarConfig {
-  peakKw: number         // Installed peak capacity in kWp
-  tiltDeg: number        // Panel tilt angle (0 = flat, 90 = vertical)
-  azimuthDeg: number     // Azimuth (0 = south, -90 = east, 90 = west)
-  systemLossPct: number  // Total system losses (%), typically 14
+  systemLossPct: number   // Total system losses (%), typically 14
+  segments: RoofSegment[] // 1–3 roof segments
 }
 
 // --- Address & location ---

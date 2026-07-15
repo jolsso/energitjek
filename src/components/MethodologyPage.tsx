@@ -169,7 +169,7 @@ export function MethodologyPage({ onBack }: Props) {
             <div className="font-medium text-foreground">Parametre vi sender</div>
             <ul className="space-y-1 text-muted-foreground leading-relaxed">
               <li><span className="text-orange-500 font-medium">→</span> Latitude/longitude</li>
-              <li><span className="text-orange-500 font-medium">→</span> Toppeffekt (kWp)</li>
+              <li><span className="text-orange-500 font-medium">→</span> Installeret effekt (kWp) — pr. tag-flade</li>
               <li><span className="text-orange-500 font-medium">→</span> Hælding (0–90°)</li>
               <li><span className="text-orange-500 font-medium">→</span> Azimut (-180° til 180°)</li>
               <li><span className="text-orange-500 font-medium">→</span> Systemtab (%)</li>
@@ -191,6 +191,39 @@ export function MethodologyPage({ onBack }: Props) {
         <Formula lines={[
           'produktion[h] = P[h] / 1000',
           '// W gennemsnit pr. time → kWh pr. time',
+        ]} />
+
+        <div className="rounded-lg bg-muted/50 border border-border p-3 text-xs text-muted-foreground space-y-1">
+          <div className="font-medium text-foreground">Flere tag-flader</div>
+          <div>
+            Et anlæg kan bestå af op til 3 tag-flader med hver sin hælding og retning — fx en øst- og en vestvendt side. PVGIS kaldes én gang pr. tag-flade, og de resulterende timeserier for produktion lægges sammen time for time, før de indgår i simuleringen.
+          </div>
+        </div>
+        <Formula lines={[
+          'produktionTotal[h] = Σ tagflade.P[h] / 1000   // summeret på tværs af tag-flader',
+        ]} />
+
+        <p className="text-sm text-muted-foreground">
+          Installeret effekt (kWp) for hver tag-flade kan angives på to måder:
+        </p>
+        <div className="grid sm:grid-cols-2 gap-3 text-xs">
+          <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+            <div className="font-medium text-foreground">Direkte (kWp)</div>
+            <p className="text-muted-foreground leading-relaxed">
+              Du angiver den installerede effekt direkte — typisk fra et konkret tilbud eller en eksisterende installation.
+            </p>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+            <div className="font-medium text-foreground">Ud fra tagmål</div>
+            <p className="text-muted-foreground leading-relaxed">
+              Du angiver tagfladens bredde og længde samt panelspecifikationer (effekt og fysiske mål — standard 440 Wp / 1,13 × 2,28 m). Effekten udregnes som et groft estimat ud fra, hvor mange paneler der kan være på arealet.
+            </p>
+          </div>
+        </div>
+        <Formula lines={[
+          'nyttigAreal        = tagbredde × taglængde × 0,85       // 85 % — plads til montering, kanter, skorstene mv.',
+          'panelAntal         = ⌊ nyttigAreal / (panelbredde × panellængde) ⌋',
+          'installeretEffekt  = panelAntal × paneleffekt / 1000    // Wp → kWp',
         ]} />
       </Section>
 

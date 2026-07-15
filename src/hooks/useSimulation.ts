@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
-import { fetchPVGISData, pvgisTimeToCopenhagenHour } from '@/lib/pvgis'
+import { fetchPVGISDataForSegments, pvgisTimeToCopenhagenHour } from '@/lib/pvgis'
 import { fetchSpotPrices, fetchCO2Emissions, VAT_MULTIPLIER, EUR_TO_DKK } from '@/lib/energidataservice'
 import { fetchGridTariff, dsoFromPostcode, ELAFGIFT_DKK, SYSTEM_TARIFF_DKK, FALLBACK_NETTARIF_DKK } from '@/lib/gridtariff'
 import { runSimulation, HEATPUMP_ADDON_KWH } from '@/lib/simulation'
@@ -43,10 +43,10 @@ export function useSimulation() {
         : dsoFromPostcode(postcode)
 
       const [pvgis, pvgisExisting, rawPrices, tariff24, co2Factors] = await Promise.all([
-        fetchPVGISData(coordinates, solarConfig, dataYear),
+        fetchPVGISDataForSegments(coordinates, solarConfig.segments, solarConfig.systemLossPct, dataYear),
         // Fetch existing system PVGIS in parallel when user has solar already installed
         existingSolarConfig && consumption.hasExport
-          ? fetchPVGISData(coordinates, existingSolarConfig, dataYear)
+          ? fetchPVGISDataForSegments(coordinates, existingSolarConfig.segments, existingSolarConfig.systemLossPct, dataYear)
           : Promise.resolve(null),
         // Skip spot price fetch when user has set a fixed spot price
         fixedSpotDkk === null

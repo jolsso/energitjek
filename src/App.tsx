@@ -206,7 +206,7 @@ export default function App() {
                     <AddressMap
                       coordinates={coordinates}
                       displayName={address}
-                      azimuthDeg={solarConfig.azimuthDeg}
+                      azimuthDegs={solarConfig.segments.map((s) => s.azimuthDeg)}
                     />
                   </div>
                 )}
@@ -214,7 +214,7 @@ export default function App() {
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
                   advanced={advanced}
                 />
-                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
+                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm />}
                 <ConsumptionAddonsForm />
                 <BatteryConfigForm advanced={advanced} />
                 <PricingForm />

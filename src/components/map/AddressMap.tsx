@@ -52,10 +52,10 @@ function FlyTo({ coords }: { coords: Coordinates }) {
 interface Props {
   coordinates: Coordinates
   displayName: string
-  azimuthDeg?: number
+  azimuthDegs?: number[]
 }
 
-export function AddressMap({ coordinates, displayName, azimuthDeg }: Props) {
+export function AddressMap({ coordinates, displayName, azimuthDegs }: Props) {
   return (
     <div className="rounded-md overflow-hidden border border-border h-48">
       <MapContainer
@@ -70,14 +70,15 @@ export function AddressMap({ coordinates, displayName, azimuthDeg }: Props) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <FlyTo coords={coordinates} />
-        {/* Direction arrow behind the pin */}
-        {azimuthDeg !== undefined && (
+        {/* Direction arrows behind the pin — one per roof segment */}
+        {azimuthDegs?.map((deg, i) => (
           <Marker
+            key={i}
             position={[coordinates.lat, coordinates.lon]}
-            icon={makeArrowIcon(azimuthDeg)}
+            icon={makeArrowIcon(deg)}
             zIndexOffset={-100}
           />
-        )}
+        ))}
         {/* Address pin */}
         <Marker position={[coordinates.lat, coordinates.lon]} icon={markerIcon}>
           <Popup maxWidth={240}>

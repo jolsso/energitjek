@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useAppStore } from '@/store/appStore'
+import { useAppStore, MAX_SEGMENTS, defaultExistingSolarConfig } from '@/store/appStore'
 
 // Reset to defaults before every test to ensure isolation
 beforeEach(() => {
@@ -12,7 +12,10 @@ describe('appStore — initial state', () => {
     expect(s.address).toBe('')
     expect(s.postcode).toBe('')
     expect(s.coordinates).toBeNull()
-    expect(s.solarConfig).toEqual({ peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 14 })
+    expect(s.solarConfig.systemLossPct).toBe(14)
+    expect(s.solarConfig.segments).toHaveLength(1)
+    expect(s.solarConfig.segments[0]).toMatchObject({ inputMode: 'capacity', peakKw: 6, tiltDeg: 35, azimuthDeg: 0 })
+    expect(typeof s.solarConfig.segments[0].id).toBe('string')
     expect(s.consumption).toEqual({ source: 'manual', annualKwh: 5000 })
     expect(s.priceArea).toBe('DK2')
     expect(s.investmentDkk).toBe(60000)
@@ -48,21 +51,57 @@ describe('appStore — setters', () => {
     expect(useAppStore.getState().coordinates).toBeNull()
   })
 
-  it('setSolarConfig merges partial update', () => {
-    useAppStore.getState().setSolarConfig({ peakKw: 10 })
+  it('setSystemLossPct updates only the loss percentage', () => {
+    useAppStore.getState().setSystemLossPct(10)
     const c = useAppStore.getState().solarConfig
-    expect(c.peakKw).toBe(10)
-    expect(c.tiltDeg).toBe(35)     // unchanged
-    expect(c.azimuthDeg).toBe(0)   // unchanged
-    expect(c.systemLossPct).toBe(14) // unchanged
+    expect(c.systemLossPct).toBe(10)
+    expect(c.segments).toHaveLength(1)
   })
 
-  it('setSolarConfig handles multiple fields', () => {
-    useAppStore.getState().setSolarConfig({ tiltDeg: 20, azimuthDeg: 90 })
-    const c = useAppStore.getState().solarConfig
-    expect(c.tiltDeg).toBe(20)
-    expect(c.azimuthDeg).toBe(90)
-    expect(c.peakKw).toBe(6) // unchanged
+  it('updateSolarSegment merges a partial update into the matching segment', () => {
+    const id = useAppStore.getState().solarConfig.segments[0].id
+    useAppStore.getState().updateSolarSegment(id, { peakKw: 10 })
+    const seg = useAppStore.getState().solarConfig.segments[0]
+    expect(seg.peakKw).toBe(10)
+    expect(seg.tiltDeg).toBe(35)     // unchanged
+    expect(seg.azimuthDeg).toBe(0)   // unchanged
+  })
+
+  it('updateSolarSegment handles multiple fields', () => {
+    const id = useAppStore.getState().solarConfig.segments[0].id
+    useAppStore.getState().updateSolarSegment(id, { tiltDeg: 20, azimuthDeg: 90 })
+    const seg = useAppStore.getState().solarConfig.segments[0]
+    expect(seg.tiltDeg).toBe(20)
+    expect(seg.azimuthDeg).toBe(90)
+    expect(seg.peakKw).toBe(6) // unchanged
+  })
+
+  it('addSolarSegment appends a new segment, up to MAX_SEGMENTS', () => {
+    const { addSolarSegment } = useAppStore.getState()
+    addSolarSegment()
+    expect(useAppStore.getState().solarConfig.segments).toHaveLength(2)
+    addSolarSegment()
+    expect(useAppStore.getState().solarConfig.segments).toHaveLength(3)
+    addSolarSegment() // beyond MAX_SEGMENTS — no-op
+    expect(useAppStore.getState().solarConfig.segments).toHaveLength(MAX_SEGMENTS)
+  })
+
+  it('addSolarSegment assigns distinct ids and an east/west-leaning azimuth', () => {
+    useAppStore.getState().addSolarSegment()
+    const segments = useAppStore.getState().solarConfig.segments
+    expect(segments[1].id).not.toBe(segments[0].id)
+    expect(segments[1].azimuthDeg).toBe(-90)
+  })
+
+  it('removeSolarSegment removes the matching segment but never the last one', () => {
+    useAppStore.getState().addSolarSegment()
+    const secondId = useAppStore.getState().solarConfig.segments[1].id
+    useAppStore.getState().removeSolarSegment(secondId)
+    expect(useAppStore.getState().solarConfig.segments).toHaveLength(1)
+
+    const lastId = useAppStore.getState().solarConfig.segments[0].id
+    useAppStore.getState().removeSolarSegment(lastId)
+    expect(useAppStore.getState().solarConfig.segments).toHaveLength(1) // guarded — cannot remove the only segment
   })
 
   it('setInvestmentDkk', () => {
@@ -121,9 +160,28 @@ describe('appStore — setters', () => {
   })
 
   it('setExistingSolarConfig stores config', () => {
-    const cfg = { peakKw: 3, tiltDeg: 30, azimuthDeg: 0, systemLossPct: 14 }
+    const cfg = defaultExistingSolarConfig()
     useAppStore.getState().setExistingSolarConfig(cfg)
     expect(useAppStore.getState().existingSolarConfig).toEqual(cfg)
+  })
+
+  it('setExistingSystemLossPct is a no-op when existing solar is disabled', () => {
+    useAppStore.getState().setExistingSystemLossPct(8)
+    expect(useAppStore.getState().existingSolarConfig).toBeNull()
+  })
+
+  it('addExistingSegment / removeExistingSegment / updateExistingSegment operate on existingSolarConfig', () => {
+    useAppStore.getState().setExistingSolarConfig(defaultExistingSolarConfig())
+    useAppStore.getState().addExistingSegment()
+    expect(useAppStore.getState().existingSolarConfig?.segments).toHaveLength(2)
+
+    const id = useAppStore.getState().existingSolarConfig!.segments[0].id
+    useAppStore.getState().updateExistingSegment(id, { peakKw: 4 })
+    expect(useAppStore.getState().existingSolarConfig!.segments[0].peakKw).toBe(4)
+
+    const secondId = useAppStore.getState().existingSolarConfig!.segments[1].id
+    useAppStore.getState().removeExistingSegment(secondId)
+    expect(useAppStore.getState().existingSolarConfig?.segments).toHaveLength(1)
   })
 
   it('setConsumption merges partial update', () => {
@@ -151,9 +209,9 @@ describe('appStore — reset', () => {
     store.setFixedSpotDkk(0.60)
     store.setHeatpumpEnabled(true)
     store.setEvKmPerDay(80)
-    store.setSolarConfig({ peakKw: 12 })
+    store.updateSolarSegment(store.solarConfig.segments[0].id, { peakKw: 12 })
     store.setBatteryConfig({ capacityKwh: 10, maxChargeKw: 5, maxDischargeKw: 5, roundTripEfficiencyPct: 90, strategy: 'self-consumption' })
-    store.setExistingSolarConfig({ peakKw: 3, tiltDeg: 30, azimuthDeg: 0, systemLossPct: 14 })
+    store.setExistingSolarConfig(defaultExistingSolarConfig())
 
     store.reset()
 
@@ -165,7 +223,9 @@ describe('appStore — reset', () => {
     expect(s.fixedSpotDkk).toBeNull()
     expect(s.heatpumpEnabled).toBe(false)
     expect(s.evKmPerDay).toBeNull()
-    expect(s.solarConfig).toEqual({ peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 14 })
+    expect(s.solarConfig.systemLossPct).toBe(14)
+    expect(s.solarConfig.segments).toHaveLength(1)
+    expect(s.solarConfig.segments[0]).toMatchObject({ inputMode: 'capacity', peakKw: 6, tiltDeg: 35, azimuthDeg: 0 })
     expect(s.batteryConfig).toBeNull()
     expect(s.existingSolarConfig).toBeNull()
     expect(s.pvgisData).toBeNull()

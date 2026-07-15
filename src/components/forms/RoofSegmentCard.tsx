@@ -6,7 +6,9 @@ import { SliderField, TiltIllustration, azimuthLabel } from './SliderField'
 
 interface RoofSegmentCardProps {
   segment: RoofSegment
-  advanced: boolean
+  /** Show tilt/azimuth sliders — always true for multi-segment systems, since
+   *  differing orientation is the reason to have more than one segment. */
+  showOrientation: boolean
   title?: string
   peakKwMin?: number
   peakKwMax?: number
@@ -16,7 +18,7 @@ interface RoofSegmentCardProps {
 
 export function RoofSegmentCard({
   segment,
-  advanced,
+  showOrientation,
   title,
   peakKwMin = 1,
   peakKwMax = 50,
@@ -116,7 +118,7 @@ export function RoofSegmentCard({
                 onChange={(v) => onUpdate({ panelWidthM: v })}
               />
               <SliderField
-                label="Panelhøjde"
+                label="Panellængde"
                 value={panel.heightM}
                 min={0.5}
                 max={3}
@@ -140,7 +142,7 @@ export function RoofSegmentCard({
         />
       )}
 
-      {advanced && (
+      {showOrientation && (
         <>
           <SliderField
             label="Hældning"

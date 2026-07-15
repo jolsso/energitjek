@@ -85,7 +85,7 @@ export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) 
               <div key={segment.id} className={i > 0 ? 'pt-4' : undefined}>
                 <RoofSegmentCard
                   segment={segment}
-                  advanced={advanced}
+                  showOrientation={advanced || segments.length > 1}
                   title={segments.length > 1 ? `Tag-flade ${i + 1}` : undefined}
                   peakKwMin={0.5}
                   peakKwMax={30}

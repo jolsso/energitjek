@@ -206,7 +206,7 @@ export default function App() {
                     <AddressMap
                       coordinates={coordinates}
                       displayName={address}
-                      azimuthDeg={solarConfig.segments[0]?.azimuthDeg}
+                      azimuthDegs={solarConfig.segments.map((s) => s.azimuthDeg)}
                     />
                   </div>
                 )}

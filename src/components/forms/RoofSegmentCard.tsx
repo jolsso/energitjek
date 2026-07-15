@@ -134,7 +134,7 @@ export function RoofSegmentCard({
           max={peakKwMax}
           step={peakKwStep}
           unit="kWp"
-          description="Samlet toppeffekt for denne tag-flade"
+          description="Samlet installeret effekt for denne tag-flade"
           onChange={(v) => onUpdate({ peakKw: v })}
         />
       )}

@@ -169,7 +169,7 @@ export function MethodologyPage({ onBack }: Props) {
             <div className="font-medium text-foreground">Parametre vi sender</div>
             <ul className="space-y-1 text-muted-foreground leading-relaxed">
               <li><span className="text-orange-500 font-medium">→</span> Latitude/longitude</li>
-              <li><span className="text-orange-500 font-medium">→</span> Toppeffekt (kWp) — pr. tag-flade</li>
+              <li><span className="text-orange-500 font-medium">→</span> Installeret effekt (kWp) — pr. tag-flade</li>
               <li><span className="text-orange-500 font-medium">→</span> Hælding (0–90°)</li>
               <li><span className="text-orange-500 font-medium">→</span> Azimut (-180° til 180°)</li>
               <li><span className="text-orange-500 font-medium">→</span> Systemtab (%)</li>
@@ -204,7 +204,7 @@ export function MethodologyPage({ onBack }: Props) {
         ]} />
 
         <p className="text-sm text-muted-foreground">
-          Toppeffekten (kWp) for hver tag-flade kan angives på to måder:
+          Installeret effekt (kWp) for hver tag-flade kan angives på to måder:
         </p>
         <div className="grid sm:grid-cols-2 gap-3 text-xs">
           <div className="rounded-lg border border-border bg-card p-3 space-y-2">
@@ -221,9 +221,9 @@ export function MethodologyPage({ onBack }: Props) {
           </div>
         </div>
         <Formula lines={[
-          'nyttigAreal = tagbredde × taglængde × 0,85       // 85 % — plads til montering, kanter, skorstene mv.',
-          'panelAntal  = ⌊ nyttigAreal / (panelbredde × panellængde) ⌋',
-          'toppeffekt  = panelAntal × paneleffekt / 1000    // Wp → kWp',
+          'nyttigAreal        = tagbredde × taglængde × 0,85       // 85 % — plads til montering, kanter, skorstene mv.',
+          'panelAntal         = ⌊ nyttigAreal / (panelbredde × panellængde) ⌋',
+          'installeretEffekt  = panelAntal × paneleffekt / 1000    // Wp → kWp',
         ]} />
       </Section>
 

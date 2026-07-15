@@ -1,17 +1,30 @@
 import { Sun } from 'lucide-react'
-import { useAppStore, defaultExistingSolarConfig } from '@/store/appStore'
+import { useAppStore, defaultExistingSolarConfig, MAX_SEGMENTS } from '@/store/appStore'
+import { getSegmentPeakKw } from '@/lib/roofCapacity'
+import { RoofSegmentCard } from './RoofSegmentCard'
 
 export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) {
   const existingSolarConfig    = useAppStore((s) => s.existingSolarConfig)
   const setExistingSolarConfig = useAppStore((s) => s.setExistingSolarConfig)
+  const addExistingSegment     = useAppStore((s) => s.addExistingSegment)
+  const removeExistingSegment  = useAppStore((s) => s.removeExistingSegment)
   const updateExistingSegment  = useAppStore((s) => s.updateExistingSegment)
 
   const enabled = existingSolarConfig !== null
   const config  = existingSolarConfig ?? defaultExistingSolarConfig()
-  const segment = config.segments[0]
+  const segments = config.segments
+  const totalKw = segments.reduce((sum, seg) => sum + getSegmentPeakKw(seg), 0)
 
   const toggle = () => setExistingSolarConfig(enabled ? null : defaultExistingSolarConfig())
-  const update = (partial: Partial<typeof segment>) => updateExistingSegment(segment.id, partial)
+
+  const setSegmentCount = (target: number) => {
+    const current = segments.length
+    if (target > current) {
+      for (let i = current; i < target; i++) addExistingSegment()
+    } else if (target < current) {
+      segments.slice(target).forEach((seg) => removeExistingSegment(seg.id))
+    }
+  }
 
   return (
     <div className="rounded-xl border border-amber-200 bg-amber-50/50 card-shadow p-5 space-y-4">
@@ -44,59 +57,44 @@ export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) 
 
       {enabled && (
         <>
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <label className="font-medium">Installeret effekt</label>
-              <span className="text-muted-foreground">{segment.peakKw} kWp</span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-amber-700">Antal tag-flader</span>
+            <div className="flex rounded-lg border border-amber-200 bg-amber-100/50 p-0.5 text-sm">
+              {Array.from({ length: MAX_SEGMENTS }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setSegmentCount(n)}
+                  className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+                    segments.length === n ? 'bg-card shadow-sm text-amber-900' : 'text-amber-700 hover:text-amber-900'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
             </div>
-            <input
-              type="range"
-              min={0.5}
-              max={30}
-              step={0.5}
-              value={segment.peakKw}
-              onChange={(e) => update({ peakKw: parseFloat(e.target.value) })}
-              className="w-full accent-primary"
-            />
-            <p className="text-xs text-muted-foreground">Dit nuværende anlægs toppeffekt</p>
           </div>
 
-          {advanced && (
-            <>
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <label className="font-medium">Hældning</label>
-                  <span className="text-muted-foreground">{segment.tiltDeg}°</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={90}
-                  step={5}
-                  value={segment.tiltDeg}
-                  onChange={(e) => update({ tiltDeg: parseInt(e.target.value) })}
-                  className="w-full accent-primary"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <label className="font-medium">Retning (azimut)</label>
-                  <span className="text-muted-foreground">{segment.azimuthDeg}°</span>
-                </div>
-                <input
-                  type="range"
-                  min={-180}
-                  max={180}
-                  step={5}
-                  value={segment.azimuthDeg}
-                  onChange={(e) => update({ azimuthDeg: parseInt(e.target.value) })}
-                  className="w-full accent-primary"
-                />
-                <p className="text-xs text-muted-foreground">-90° = øst · 0° = syd · 90° = vest</p>
-              </div>
-            </>
+          {segments.length > 1 && (
+            <p className="text-sm text-amber-700">
+              I alt <span className="font-medium text-amber-900">{totalKw.toFixed(1)} kWp</span> fordelt på {segments.length} tag-flader
+            </p>
           )}
+
+          <div className="space-y-4 divide-y divide-amber-200">
+            {segments.map((segment, i) => (
+              <div key={segment.id} className={i > 0 ? 'pt-4' : undefined}>
+                <RoofSegmentCard
+                  segment={segment}
+                  advanced={advanced}
+                  title={segments.length > 1 ? `Tag-flade ${i + 1}` : undefined}
+                  peakKwMin={0.5}
+                  peakKwMax={30}
+                  peakKwStep={0.5}
+                  onUpdate={(partial) => updateExistingSegment(segment.id, partial)}
+                />
+              </div>
+            ))}
+          </div>
 
           <p className="text-xs text-amber-700 border-t border-amber-200 pt-3">
             Simulationsformen nedenfor repræsenterer den <span className="font-medium">udvidelse</span> du ønsker at beregne oven i dit nuværende anlæg.

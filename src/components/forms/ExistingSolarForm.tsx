@@ -3,7 +3,7 @@ import { useAppStore, defaultExistingSolarConfig, MAX_SEGMENTS } from '@/store/a
 import { getSegmentPeakKw } from '@/lib/roofCapacity'
 import { RoofSegmentCard } from './RoofSegmentCard'
 
-export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) {
+export function ExistingSolarForm() {
   const existingSolarConfig    = useAppStore((s) => s.existingSolarConfig)
   const setExistingSolarConfig = useAppStore((s) => s.setExistingSolarConfig)
   const addExistingSegment     = useAppStore((s) => s.addExistingSegment)
@@ -85,7 +85,6 @@ export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) 
               <div key={segment.id} className={i > 0 ? 'pt-4' : undefined}>
                 <RoofSegmentCard
                   segment={segment}
-                  showOrientation={advanced || segments.length > 1}
                   title={segments.length > 1 ? `Tag-flade ${i + 1}` : undefined}
                   peakKwMin={0.5}
                   peakKwMax={30}

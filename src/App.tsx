@@ -214,7 +214,7 @@ export default function App() {
                   label={(consumption.hasExport || existingSolarConfig) ? 'Simuleret udvidelse' : undefined}
                   advanced={advanced}
                 />
-                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm advanced={advanced} />}
+                {(consumption.hasExport || existingSolarConfig) && <ExistingSolarForm />}
                 <ConsumptionAddonsForm />
                 <BatteryConfigForm advanced={advanced} />
                 <PricingForm />

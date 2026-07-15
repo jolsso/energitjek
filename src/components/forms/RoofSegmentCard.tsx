@@ -6,9 +6,6 @@ import { SliderField, TiltIllustration, azimuthLabel } from './SliderField'
 
 interface RoofSegmentCardProps {
   segment: RoofSegment
-  /** Show tilt/azimuth sliders — always true for multi-segment systems, since
-   *  differing orientation is the reason to have more than one segment. */
-  showOrientation: boolean
   title?: string
   peakKwMin?: number
   peakKwMax?: number
@@ -18,7 +15,6 @@ interface RoofSegmentCardProps {
 
 export function RoofSegmentCard({
   segment,
-  showOrientation,
   title,
   peakKwMin = 1,
   peakKwMax = 50,
@@ -26,6 +22,7 @@ export function RoofSegmentCard({
   onUpdate,
 }: RoofSegmentCardProps) {
   const [panelSpecOpen, setPanelSpecOpen] = useState(false)
+  const [orientationOpen, setOrientationOpen] = useState(false)
 
   const roofWidthM = segment.roofWidthM ?? 6
   const roofHeightM = segment.roofHeightM ?? 4
@@ -142,8 +139,16 @@ export function RoofSegmentCard({
         />
       )}
 
-      {showOrientation && (
-        <>
+      <button
+        onClick={() => setOrientationOpen((o) => !o)}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
+        {orientationOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        Hældning &amp; retning
+      </button>
+
+      {orientationOpen && (
+        <div className="space-y-4 pl-3 border-l-2 border-border">
           <SliderField
             label="Hældning"
             value={segment.tiltDeg}
@@ -177,7 +182,7 @@ export function RoofSegmentCard({
               -180°/180° = nord, -90° = øst, 0° = syd (optimalt), 90° = vest · Retning vises på kortet
             </p>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

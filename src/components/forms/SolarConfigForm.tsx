@@ -59,7 +59,6 @@ export function SolarConfigForm({ label, advanced = false }: { label?: string; a
           <div key={segment.id} className={i > 0 ? 'pt-5' : undefined}>
             <RoofSegmentCard
               segment={segment}
-              showOrientation={advanced || segments.length > 1}
               title={segments.length > 1 ? `Tag-flade ${i + 1}` : undefined}
               peakKwMin={1}
               peakKwMax={50}

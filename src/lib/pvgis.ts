@@ -1,4 +1,5 @@
-import type { Coordinates, PVGISData, SolarConfig } from '@/types'
+import type { Coordinates, PVGISData, RoofSegment } from '@/types'
+import { getSegmentPeakKw } from './roofCapacity'
 
 // Requests go through /api/pvgis which is proxied to re.jrc.ec.europa.eu
 // in both dev (Vite proxy) and production (nginx proxy_pass).
@@ -12,6 +13,13 @@ export const PVGIS_MAX_YEAR = 2023
 /** @deprecated Use PVGIS_MAX_YEAR for the default year */
 export const DATA_YEAR = PVGIS_MAX_YEAR
 
+export interface PVSystemParams {
+  peakKw: number
+  tiltDeg: number
+  azimuthDeg: number
+  systemLossPct: number
+}
+
 /**
  * Fetches hourly PV production data for a single year from PVGIS (EU Commission).
  * Free, no API key required.
@@ -21,16 +29,16 @@ export const DATA_YEAR = PVGIS_MAX_YEAR
  */
 export async function fetchPVGISData(
   coords: Coordinates,
-  config: SolarConfig,
+  system: PVSystemParams,
   year: number = DATA_YEAR,
 ): Promise<PVGISData> {
   const params = new URLSearchParams({
     lat: coords.lat.toString(),
     lon: coords.lon.toString(),
-    peakpower: config.peakKw.toString(),
-    loss: config.systemLossPct.toString(),
-    angle: config.tiltDeg.toString(),
-    aspect: config.azimuthDeg.toString(),
+    peakpower: system.peakKw.toString(),
+    loss: system.systemLossPct.toString(),
+    angle: system.tiltDeg.toString(),
+    aspect: system.azimuthDeg.toString(),
     startyear: year.toString(),
     endyear: year.toString(),
     outputformat: 'json',
@@ -56,6 +64,44 @@ export async function fetchPVGISData(
 
   // seriescalc has no totals field — derive annual kWh from hourly P (W → kWh)
   const annualKwh = hourly.reduce((sum: number, h: { P: number }) => sum + h.P / 1000, 0)
+
+  return { hourly, annualKwh, location: coords }
+}
+
+/**
+ * Fetches PV production for each roof segment in parallel and sums the
+ * hourly production arrays into one combined result. Segments share the
+ * same year, so their hourly arrays line up index-for-index.
+ */
+export async function fetchPVGISDataForSegments(
+  coords: Coordinates,
+  segments: RoofSegment[],
+  systemLossPct: number,
+  year: number = DATA_YEAR,
+): Promise<PVGISData> {
+  const results = await Promise.all(
+    segments.map((segment) =>
+      fetchPVGISData(
+        coords,
+        {
+          peakKw: getSegmentPeakKw(segment),
+          tiltDeg: segment.tiltDeg,
+          azimuthDeg: segment.azimuthDeg,
+          systemLossPct,
+        },
+        year,
+      ),
+    ),
+  )
+
+  const [first, ...rest] = results
+  const hourly = first.hourly.map((row, i) => ({
+    time: row.time,
+    P: rest.reduce((sum, r) => sum + r.hourly[i].P, row.P),
+    G_i: row.G_i,
+    T2m: row.T2m,
+  }))
+  const annualKwh = results.reduce((sum, r) => sum + r.annualKwh, 0)
 
   return { hourly, annualKwh, location: coords }
 }

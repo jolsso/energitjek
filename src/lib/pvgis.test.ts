@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { pvgisTimeToISO, pvgisTimeToCopenhagenHour, fetchPVGISData } from './pvgis'
-import type { SolarConfig } from '@/types'
+import { pvgisTimeToISO, pvgisTimeToCopenhagenHour, fetchPVGISData, fetchPVGISDataForSegments, type PVSystemParams } from './pvgis'
+import type { RoofSegment } from '@/types'
 
 const COORDS = { lat: 56.15, lon: 10.21 }
-const CONFIG: SolarConfig = { peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 14 }
+const CONFIG: PVSystemParams = { peakKw: 6, tiltDeg: 35, azimuthDeg: 0, systemLossPct: 14 }
 
 // Minimal PVGIS seriescalc response matching the real API shape.
 // The real API returns { outputs: { hourly: [...] } } — NO totals field.
@@ -129,5 +129,71 @@ describe('fetchPVGISData', () => {
   it('throws on non-ok HTTP response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 400 }))
     await expect(fetchPVGISData(COORDS, CONFIG)).rejects.toThrow('400')
+  })
+})
+
+// --- fetchPVGISDataForSegments ---
+
+describe('fetchPVGISDataForSegments', () => {
+  beforeEach(() => vi.restoreAllMocks())
+
+  const segments: RoofSegment[] = [
+    { id: 'a', inputMode: 'capacity', peakKw: 6, tiltDeg: 35, azimuthDeg: -90 },
+    { id: 'b', inputMode: 'capacity', peakKw: 4, tiltDeg: 35, azimuthDeg: 90 },
+  ]
+
+  it('sums hourly production across segments index-by-index', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => makeRealPVGISResponse(3),
+    }))
+
+    const data = await fetchPVGISDataForSegments(COORDS, segments, 14)
+
+    // Each segment returns the same fixture (P: 0, 1000, 2000) — summed = 0, 2000, 4000
+    expect(data.hourly.map((h) => h.P)).toEqual([0, 2000, 4000])
+    expect(data.annualKwh).toBeCloseTo(6) // 3 kWh per segment * 2
+  })
+
+  it('fetches one segment per PVGIS request', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => makeRealPVGISResponse(2),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    await fetchPVGISDataForSegments(COORDS, segments, 14)
+
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('resolves dimensions-mode segments via getSegmentPeakKw before requesting', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => makeRealPVGISResponse(1),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const dimensionSegment: RoofSegment[] = [
+      { id: 'c', inputMode: 'dimensions', tiltDeg: 35, azimuthDeg: 0, peakKw: 0, roofWidthM: 10, roofHeightM: 6 },
+    ]
+    await fetchPVGISDataForSegments(COORDS, dimensionSegment, 14)
+
+    const url: string = mockFetch.mock.calls[0][0]
+    const peakpower = new URLSearchParams(url.split('?')[1]).get('peakpower')
+    expect(Number(peakpower)).toBeCloseTo(8.36, 1)
+  })
+
+  it('single segment matches a plain fetchPVGISData call', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => makeRealPVGISResponse(2),
+    }))
+
+    const single = await fetchPVGISDataForSegments(COORDS, [segments[0]], 14)
+    const direct = await fetchPVGISData(COORDS, { ...CONFIG, peakKw: 6, azimuthDeg: -90 })
+
+    expect(single.hourly).toEqual(direct.hourly)
+    expect(single.annualKwh).toBeCloseTo(direct.annualKwh)
   })
 })

@@ -33,7 +33,8 @@ export function ResultsPanel({ advanced = false }: { advanced?: boolean }) {
   // Derive data year from first hourly entry (format: "2023-01-01T…")
   const dataYear = simulationResult.hourly[0]?.hourStart.slice(0, 4) ?? null
 
-  const systemDesc = `${solarConfig.peakKw} kWp · ${azimuthShort(solarConfig.azimuthDeg)} · ${solarConfig.tiltDeg}° hældning`
+  const primarySegment = solarConfig.segments[0]
+  const systemDesc = `${primarySegment.peakKw} kWp · ${azimuthShort(primarySegment.azimuthDeg)} · ${primarySegment.tiltDeg}° hældning`
   const shortAddress = address.split(',')[0]?.trim()
 
   return (

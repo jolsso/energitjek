@@ -1,23 +1,17 @@
 import { Sun } from 'lucide-react'
-import { useAppStore } from '@/store/appStore'
-
-const DEFAULT_EXISTING: NonNullable<ReturnType<typeof useAppStore.getState>['existingSolarConfig']> = {
-  peakKw: 6,
-  tiltDeg: 35,
-  azimuthDeg: 0,
-  systemLossPct: 5,
-}
+import { useAppStore, defaultExistingSolarConfig } from '@/store/appStore'
 
 export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) {
   const existingSolarConfig    = useAppStore((s) => s.existingSolarConfig)
   const setExistingSolarConfig = useAppStore((s) => s.setExistingSolarConfig)
+  const updateExistingSegment  = useAppStore((s) => s.updateExistingSegment)
 
   const enabled = existingSolarConfig !== null
-  const config  = existingSolarConfig ?? DEFAULT_EXISTING
+  const config  = existingSolarConfig ?? defaultExistingSolarConfig()
+  const segment = config.segments[0]
 
-  const toggle = () => setExistingSolarConfig(enabled ? null : DEFAULT_EXISTING)
-  const update = (partial: Partial<typeof DEFAULT_EXISTING>) =>
-    setExistingSolarConfig({ ...config, ...partial })
+  const toggle = () => setExistingSolarConfig(enabled ? null : defaultExistingSolarConfig())
+  const update = (partial: Partial<typeof segment>) => updateExistingSegment(segment.id, partial)
 
   return (
     <div className="rounded-xl border border-amber-200 bg-amber-50/50 card-shadow p-5 space-y-4">
@@ -53,14 +47,14 @@ export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) 
           <div className="space-y-1">
             <div className="flex justify-between text-sm">
               <label className="font-medium">Installeret effekt</label>
-              <span className="text-muted-foreground">{config.peakKw} kWp</span>
+              <span className="text-muted-foreground">{segment.peakKw} kWp</span>
             </div>
             <input
               type="range"
               min={0.5}
               max={30}
               step={0.5}
-              value={config.peakKw}
+              value={segment.peakKw}
               onChange={(e) => update({ peakKw: parseFloat(e.target.value) })}
               className="w-full accent-primary"
             />
@@ -72,14 +66,14 @@ export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) 
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <label className="font-medium">Hældning</label>
-                  <span className="text-muted-foreground">{config.tiltDeg}°</span>
+                  <span className="text-muted-foreground">{segment.tiltDeg}°</span>
                 </div>
                 <input
                   type="range"
                   min={0}
                   max={90}
                   step={5}
-                  value={config.tiltDeg}
+                  value={segment.tiltDeg}
                   onChange={(e) => update({ tiltDeg: parseInt(e.target.value) })}
                   className="w-full accent-primary"
                 />
@@ -88,14 +82,14 @@ export function ExistingSolarForm({ advanced = false }: { advanced?: boolean }) 
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <label className="font-medium">Retning (azimut)</label>
-                  <span className="text-muted-foreground">{config.azimuthDeg}°</span>
+                  <span className="text-muted-foreground">{segment.azimuthDeg}°</span>
                 </div>
                 <input
                   type="range"
                   min={-180}
                   max={180}
                   step={5}
-                  value={config.azimuthDeg}
+                  value={segment.azimuthDeg}
                   onChange={(e) => update({ azimuthDeg: parseInt(e.target.value) })}
                   className="w-full accent-primary"
                 />

@@ -88,7 +88,7 @@ export function AddressForm() {
           <AddressMap
             coordinates={coordinates}
             displayName={matchedName}
-            azimuthDeg={solarConfig.azimuthDeg}
+            azimuthDeg={solarConfig.segments[0]?.azimuthDeg}
           />
         </>
       )}

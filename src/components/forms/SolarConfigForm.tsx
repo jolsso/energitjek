@@ -125,7 +125,10 @@ function TiltIllustration({ tiltDeg }: { tiltDeg: number }) {
 }
 
 export function SolarConfigForm({ label, advanced = false }: { label?: string; advanced?: boolean }) {
-  const { solarConfig, setSolarConfig } = useAppStore()
+  const solarConfig = useAppStore((s) => s.solarConfig)
+  const updateSolarSegment = useAppStore((s) => s.updateSolarSegment)
+  const setSystemLossPct = useAppStore((s) => s.setSystemLossPct)
+  const segment = solarConfig.segments[0]
 
   return (
     <div className="rounded-xl border border-border bg-card card-shadow p-5 space-y-5">
@@ -136,35 +139,35 @@ export function SolarConfigForm({ label, advanced = false }: { label?: string; a
 
       <SliderField
         label="Installeret effekt"
-        value={solarConfig.peakKw}
+        value={segment.peakKw}
         min={1}
         max={50}
         step={0.5}
         unit="kWp"
         description="Samlet toppeffekt for dit anlæg"
-        onChange={(v) => setSolarConfig({ peakKw: v })}
+        onChange={(v) => updateSolarSegment(segment.id, { peakKw: v })}
       />
 
       {advanced && (
         <>
           <SliderField
             label="Hældning"
-            value={solarConfig.tiltDeg}
+            value={segment.tiltDeg}
             min={0}
             max={90}
             step={5}
             unit="°"
             description="0° = vandret, 35° er typisk for dansk tag"
-            onChange={(v) => setSolarConfig({ tiltDeg: v })}
+            onChange={(v) => updateSolarSegment(segment.id, { tiltDeg: v })}
           >
-            <TiltIllustration tiltDeg={solarConfig.tiltDeg} />
+            <TiltIllustration tiltDeg={segment.tiltDeg} />
           </SliderField>
 
           <div className="space-y-1">
             <div className="flex justify-between text-sm">
               <label className="font-medium">Retning (azimut)</label>
               <span className="text-muted-foreground">
-                {azimuthLabel(solarConfig.azimuthDeg)} ({solarConfig.azimuthDeg}°)
+                {azimuthLabel(segment.azimuthDeg)} ({segment.azimuthDeg}°)
               </span>
             </div>
             <input
@@ -172,8 +175,8 @@ export function SolarConfigForm({ label, advanced = false }: { label?: string; a
               min={-180}
               max={180}
               step={5}
-              value={solarConfig.azimuthDeg}
-              onChange={(e) => setSolarConfig({ azimuthDeg: parseInt(e.target.value) })}
+              value={segment.azimuthDeg}
+              onChange={(e) => updateSolarSegment(segment.id, { azimuthDeg: parseInt(e.target.value) })}
               className="w-full accent-primary"
             />
             <p className="text-xs text-muted-foreground">
@@ -189,7 +192,7 @@ export function SolarConfigForm({ label, advanced = false }: { label?: string; a
             step={1}
             unit="%"
             description="Inkl. temperatur, kabelstab, vekselretter, snavs og degradering. 14% er PVGIS' realistiske standard."
-            onChange={(v) => setSolarConfig({ systemLossPct: v })}
+            onChange={(v) => setSystemLossPct(v)}
           />
         </>
       )}

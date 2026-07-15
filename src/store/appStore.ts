@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type {
   BatteryConfig,
   Coordinates,
+  RoofSegment,
   SolarConfig,
   ConsumptionData,
   HourlyPrice,
@@ -10,6 +11,60 @@ import type {
   SimulationResult,
 } from '@/types'
 import type { PriceArea } from '@/lib/energidataservice'
+
+export const MAX_SEGMENTS = 3
+
+function makeSegment(overrides: Partial<RoofSegment> = {}): RoofSegment {
+  return {
+    id: crypto.randomUUID(),
+    inputMode: 'capacity',
+    peakKw: 3,
+    tiltDeg: 35,
+    azimuthDeg: 0,
+    ...overrides,
+  }
+}
+
+// Azimuth suggested for the next segment added — nudges toward the
+// east/west split roof that motivated multi-segment support (issue #41).
+function nextSegmentAzimuth(existingCount: number): number {
+  return existingCount === 1 ? -90 : 90
+}
+
+function defaultSolarConfig(): SolarConfig {
+  return { systemLossPct: 14, segments: [makeSegment({ peakKw: 6, azimuthDeg: 0 })] }
+}
+
+function defaultExistingSolarConfig(): SolarConfig {
+  return { systemLossPct: 5, segments: [makeSegment({ peakKw: 6, azimuthDeg: 0 })] }
+}
+
+// --- Persisted-state migration (v1 flat SolarConfig -> v2 segments array) ---
+
+interface LegacyFlatSolarConfig {
+  peakKw: number
+  tiltDeg: number
+  azimuthDeg: number
+  systemLossPct: number
+}
+
+function isLegacyFlatSolarConfig(cfg: unknown): cfg is LegacyFlatSolarConfig {
+  return (
+    typeof cfg === 'object' && cfg !== null &&
+    'peakKw' in cfg && 'tiltDeg' in cfg && 'azimuthDeg' in cfg && 'systemLossPct' in cfg &&
+    !('segments' in cfg)
+  )
+}
+
+function migrateSolarConfig(cfg: unknown): unknown {
+  if (isLegacyFlatSolarConfig(cfg)) {
+    return {
+      systemLossPct: cfg.systemLossPct,
+      segments: [makeSegment({ peakKw: cfg.peakKw, tiltDeg: cfg.tiltDeg, azimuthDeg: cfg.azimuthDeg })],
+    }
+  }
+  return cfg
+}
 
 interface AppState {
   // User inputs (persisted in localStorage)
@@ -38,7 +93,10 @@ interface AppState {
   setAddress: (address: string) => void
   setPostcode: (postcode: string) => void
   setCoordinates: (coords: Coordinates | null) => void
-  setSolarConfig: (config: Partial<SolarConfig>) => void
+  setSystemLossPct: (pct: number) => void
+  addSolarSegment: () => void
+  removeSolarSegment: (id: string) => void
+  updateSolarSegment: (id: string, partial: Partial<RoofSegment>) => void
   setConsumption: (consumption: Partial<ConsumptionData> & { hourlyKwh?: number[] | undefined }) => void
   setPriceArea: (area: PriceArea) => void
   setInvestmentDkk: (dkk: number) => void
@@ -48,19 +106,16 @@ interface AppState {
   setBatteryConfig: (config: BatteryConfig | null) => void
   setDataYear: (year: number) => void
   setExistingSolarConfig: (config: SolarConfig | null) => void
+  setExistingSystemLossPct: (pct: number) => void
+  addExistingSegment: () => void
+  removeExistingSegment: (id: string) => void
+  updateExistingSegment: (id: string, partial: Partial<RoofSegment>) => void
   setPVGISData: (data: PVGISData | null) => void
   setSimulationResult: (result: SimulationResult | null) => void
   setHourlyPrices: (prices: HourlyPrice[] | null) => void
   setEloverblikDsoGln: (gln: string | null) => void
   setTheme: (theme: 'light' | 'dark' | 'system') => void
   reset: () => void
-}
-
-const DEFAULT_SOLAR_CONFIG: SolarConfig = {
-  peakKw: 6,
-  tiltDeg: 35,
-  azimuthDeg: 0,   // south-facing
-  systemLossPct: 14,
 }
 
 const DEFAULT_CONSUMPTION: ConsumptionData = {
@@ -74,7 +129,7 @@ export const useAppStore = create<AppState>()(
       address: '',
       postcode: '',
       coordinates: null,
-      solarConfig: DEFAULT_SOLAR_CONFIG,
+      solarConfig: defaultSolarConfig(),
       consumption: DEFAULT_CONSUMPTION,
       priceArea: 'DK2',
       investmentDkk: 60000,
@@ -93,8 +148,37 @@ export const useAppStore = create<AppState>()(
       setAddress: (address) => set({ address }),
       setPostcode: (postcode) => set({ postcode }),
       setCoordinates: (coordinates) => set({ coordinates }),
-      setSolarConfig: (config) =>
-        set((s) => ({ solarConfig: { ...s.solarConfig, ...config } })),
+
+      setSystemLossPct: (systemLossPct) =>
+        set((s) => ({ solarConfig: { ...s.solarConfig, systemLossPct } })),
+      addSolarSegment: () =>
+        set((s) => {
+          if (s.solarConfig.segments.length >= MAX_SEGMENTS) return s
+          const azimuthDeg = nextSegmentAzimuth(s.solarConfig.segments.length)
+          return {
+            solarConfig: {
+              ...s.solarConfig,
+              segments: [...s.solarConfig.segments, makeSegment({ azimuthDeg })],
+            },
+          }
+        }),
+      removeSolarSegment: (id) =>
+        set((s) => ({
+          solarConfig: {
+            ...s.solarConfig,
+            segments: s.solarConfig.segments.length > 1
+              ? s.solarConfig.segments.filter((seg) => seg.id !== id)
+              : s.solarConfig.segments,
+          },
+        })),
+      updateSolarSegment: (id, partial) =>
+        set((s) => ({
+          solarConfig: {
+            ...s.solarConfig,
+            segments: s.solarConfig.segments.map((seg) => (seg.id === id ? { ...seg, ...partial } : seg)),
+          },
+        })),
+
       setConsumption: (consumption) =>
         set((s) => ({ consumption: { ...s.consumption, ...consumption } })),
       setPriceArea: (priceArea) => set({ priceArea }),
@@ -104,7 +188,46 @@ export const useAppStore = create<AppState>()(
       setEvKmPerDay: (evKmPerDay) => set({ evKmPerDay }),
       setBatteryConfig: (batteryConfig) => set({ batteryConfig }),
       setDataYear: (dataYear) => set({ dataYear }),
+
       setExistingSolarConfig: (existingSolarConfig) => set({ existingSolarConfig }),
+      setExistingSystemLossPct: (systemLossPct) =>
+        set((s) => (s.existingSolarConfig
+          ? { existingSolarConfig: { ...s.existingSolarConfig, systemLossPct } }
+          : s)),
+      addExistingSegment: () =>
+        set((s) => {
+          if (!s.existingSolarConfig || s.existingSolarConfig.segments.length >= MAX_SEGMENTS) return s
+          const azimuthDeg = nextSegmentAzimuth(s.existingSolarConfig.segments.length)
+          return {
+            existingSolarConfig: {
+              ...s.existingSolarConfig,
+              segments: [...s.existingSolarConfig.segments, makeSegment({ azimuthDeg })],
+            },
+          }
+        }),
+      removeExistingSegment: (id) =>
+        set((s) => {
+          if (!s.existingSolarConfig) return s
+          return {
+            existingSolarConfig: {
+              ...s.existingSolarConfig,
+              segments: s.existingSolarConfig.segments.length > 1
+                ? s.existingSolarConfig.segments.filter((seg) => seg.id !== id)
+                : s.existingSolarConfig.segments,
+            },
+          }
+        }),
+      updateExistingSegment: (id, partial) =>
+        set((s) => {
+          if (!s.existingSolarConfig) return s
+          return {
+            existingSolarConfig: {
+              ...s.existingSolarConfig,
+              segments: s.existingSolarConfig.segments.map((seg) => (seg.id === id ? { ...seg, ...partial } : seg)),
+            },
+          }
+        }),
+
       setPVGISData: (pvgisData) => set({ pvgisData }),
       setSimulationResult: (simulationResult) => set({ simulationResult }),
       setHourlyPrices: (hourlyPrices) => set({ hourlyPrices }),
@@ -115,7 +238,7 @@ export const useAppStore = create<AppState>()(
           address: '',
           postcode: '',
           coordinates: null,
-          solarConfig: DEFAULT_SOLAR_CONFIG,
+          solarConfig: defaultSolarConfig(),
           consumption: DEFAULT_CONSUMPTION,
           priceArea: 'DK2',
           investmentDkk: 60000,
@@ -133,6 +256,16 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'energitjek-state',
+      version: 2,
+      migrate: (persisted, version) => {
+        if (version < 2 && persisted && typeof persisted === 'object') {
+          const state = persisted as Record<string, unknown>
+          if ('solarConfig' in state) state.solarConfig = migrateSolarConfig(state.solarConfig)
+          if ('existingSolarConfig' in state) state.existingSolarConfig = migrateSolarConfig(state.existingSolarConfig)
+          return state
+        }
+        return persisted
+      },
       // Only persist user inputs, not computed results
       partialize: (s) => ({
         address: s.address,
@@ -157,3 +290,5 @@ export const useAppStore = create<AppState>()(
     },
   ),
 )
+
+export { defaultExistingSolarConfig }
